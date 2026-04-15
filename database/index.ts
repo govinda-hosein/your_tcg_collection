@@ -10,7 +10,9 @@
  * ```
  */
 
+export { default as PokemonCard } from "./pokemonCard.model";
 export { default as Set } from "./set.model";
 
 // Export types for TypeScript consumers
+export type { PokemonCardDocument } from "./pokemonCard.model";
 export type { SetDocument } from "./set.model";
