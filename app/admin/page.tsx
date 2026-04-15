@@ -1,10 +1,15 @@
 "use client";
 
-import { LogIn, LogOut, ShieldCheck } from "lucide-react";
+import { ArrowLeft, LogIn, LogOut, ShieldCheck } from "lucide-react";
 import { SessionProvider, signIn, signOut, useSession } from "next-auth/react";
+
+import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 
 function AdminLoginContent() {
   const { data: session } = useSession();
+  const searchParams = useSearchParams();
+  const authError = searchParams.get("error");
 
   return (
     <main className="min-h-screen relative overflow-hidden px-4 py-8">
@@ -15,6 +20,19 @@ function AdminLoginContent() {
           backgroundRepeat: "repeat",
         }}
       />
+
+      <div className="absolute top-4 left-4 sm:top-6 sm:left-6 z-20">
+        <Link
+          href="/"
+          className="inline-flex items-center gap-2 px-3 py-2 rounded-lg border border-border
+                   bg-card/90 text-foreground shadow-md backdrop-blur-sm hover:bg-muted
+                   transition-colors duration-200"
+          style={{ fontFamily: "var(--font-display)" }}
+        >
+          <ArrowLeft className="w-4 h-4" />
+          Back Home
+        </Link>
+      </div>
 
       <div className="relative z-10 min-h-[calc(100vh-4rem)] flex items-center justify-center">
         <div className="w-full max-w-md rounded-2xl border-2 border-border bg-card/90 shadow-lg backdrop-blur-sm p-6 sm:p-8">
@@ -35,6 +53,12 @@ function AdminLoginContent() {
             </div>
           </div>
 
+          {authError ? (
+            <div className="mb-4 rounded-lg border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm text-destructive">
+              Access denied. Only configured admin email addresses can sign in.
+            </div>
+          ) : null}
+
           {session ? (
             <div className="space-y-4">
               <div className="rounded-lg border border-border bg-muted/40 p-3 text-sm">
@@ -53,7 +77,7 @@ function AdminLoginContent() {
             </div>
           ) : (
             <button
-              onClick={() => signIn("google", { callbackUrl: "/" })}
+              onClick={() => signIn("google", { callbackUrl: "/admin" })}
               className="w-full px-5 py-3 bg-primary text-primary-foreground rounded-lg
                        flex items-center justify-center gap-2 shadow-lg hover:scale-[1.01]
                        transition-transform duration-200"
