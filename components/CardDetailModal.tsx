@@ -4,6 +4,7 @@ import type {
 } from "@/database/ownedCard.model";
 import { Edit2, Save, Trash2, X } from "lucide-react";
 
+import { RARITY_COLORS } from "@/lib/constants";
 import { useState } from "react";
 
 interface CardDetailModalProps {
@@ -12,15 +13,6 @@ interface CardDetailModalProps {
   onUpdate: (updates: Partial<OwnedCardViewModel>) => void;
   onDelete: () => void;
 }
-
-const rarityColors: Record<string, string> = {
-  Common: "from-gray-400 to-gray-300",
-  Uncommon: "from-green-400 to-green-300",
-  Rare: "from-blue-400 to-blue-300",
-  "Holo Rare": "from-purple-400 to-pink-400",
-  "Ultra Rare": "from-yellow-400 to-orange-400",
-  "Secret Rare": "from-red-500 to-pink-500",
-};
 
 export function CardDetailModal({
   card,
@@ -38,7 +30,7 @@ export function CardDetailModal({
   };
 
   const rarityGradient =
-    rarityColors[pokemonCard?.rarity ?? ""] || "from-gray-300 to-gray-200";
+    RARITY_COLORS[pokemonCard?.rarity ?? ""] || "from-gray-300 to-gray-200";
 
   return (
     <div

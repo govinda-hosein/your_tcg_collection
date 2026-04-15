@@ -1,4 +1,5 @@
 import type { OwnedCardViewModel } from "@/database/ownedCard.model";
+import { RARITY_COLORS } from "@/lib/constants";
 import { Trash2 } from "lucide-react";
 import Image from "next/image";
 
@@ -8,15 +9,6 @@ interface CardItemProps {
   onDelete: (id: string) => void;
   index: number;
 }
-
-const rarityColors: Record<string, string> = {
-  Common: "from-gray-400 to-gray-300",
-  Uncommon: "from-green-400 to-green-300",
-  Rare: "from-blue-400 to-blue-300",
-  "Holo Rare": "from-purple-400 to-pink-400",
-  "Ultra Rare": "from-yellow-400 to-orange-400",
-  "Secret Rare": "from-red-500 to-pink-500",
-};
 
 const typeColors: Record<string, string> = {
   Fire: "#ef233c",
@@ -34,7 +26,7 @@ const typeColors: Record<string, string> = {
 export function CardItem({ card, onClick, onDelete, index }: CardItemProps) {
   const pokemonCard = card.card;
   const rarityGradient =
-    rarityColors[pokemonCard?.rarity ?? ""] || "from-gray-300 to-gray-200";
+    RARITY_COLORS[pokemonCard?.rarity ?? ""] || "from-gray-300 to-gray-200";
   const isHolo =
     pokemonCard?.rarity?.includes("Holo") ||
     pokemonCard?.rarity?.includes("Ultra") ||
