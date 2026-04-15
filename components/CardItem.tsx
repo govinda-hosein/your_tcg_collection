@@ -1,6 +1,5 @@
-import { Sparkles, Trash2 } from "lucide-react";
-
 import { PokemonCard } from "@/app/page";
+import { Trash2 } from "lucide-react";
 
 interface CardItemProps {
   card: PokemonCard;
@@ -89,30 +88,14 @@ export function CardItem({ card, onClick, onDelete, index }: CardItemProps) {
         )}
 
         {/* Card Image Placeholder */}
-        <div
-          className={`aspect-2/3 bg-linear-to-br ${rarityGradient} relative overflow-hidden`}
-        >
+        <div className={`aspect-2/3  relative overflow-hidden`}>
           {/* Placeholder Pokemon Silhouette */}
           <div className="absolute inset-0 flex items-center justify-center">
-            <div className="text-6xl opacity-20">⚡</div>
+            <img
+              src="https://tcgplayer-cdn.tcgplayer.com/product/656257_in_1000x1000.jpg"
+              alt="Pokemon Card"
+            />
           </div>
-
-          {/* Type Badge */}
-          {card.type && (
-            <div
-              className="absolute top-2 right-2 px-2 py-1 rounded-md text-xs font-bold text-white shadow-lg"
-              style={{ backgroundColor: typeColors[card.type] || "#666" }}
-            >
-              {card.type}
-            </div>
-          )}
-
-          {/* Holo Sparkle Indicator */}
-          {isHolo && (
-            <div className="absolute top-2 left-2">
-              <Sparkles className="w-5 h-5 text-yellow-300 animate-pulse" />
-            </div>
-          )}
 
           {/* Quantity Badge */}
           {card.quantity > 1 && (
@@ -127,7 +110,19 @@ export function CardItem({ card, onClick, onDelete, index }: CardItemProps) {
 
         {/* Card Info */}
         <div className="p-3 bg-white">
-          <h3 className="font-bold text-sm mb-1 truncate">{card.name}</h3>
+          <div className="flex items-center justify-between text-xs text-muted-foreground mb-2">
+            <h3 className="font-bold text-sm mb-1 truncate">{card.name}</h3>
+            {/* Type Badge */}
+            {card.type && (
+              <div
+                className="px-2 py-1 rounded-md text-xs font-bold text-white shadow-lg"
+                style={{ backgroundColor: typeColors[card.type] || "#666" }}
+              >
+                {card.type}
+              </div>
+            )}
+          </div>
+
           <div className="flex items-center justify-between text-xs text-muted-foreground">
             <span>{card.set}</span>
             <span>{card.number}</span>
