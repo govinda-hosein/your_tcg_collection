@@ -7,6 +7,7 @@ import { CollectionStats } from "@/components/CollectionStats";
 import { SearchBar } from "@/components/SearchBar";
 import type { OwnedCardViewModel } from "@/database/ownedCard.model";
 import { Plus } from "lucide-react";
+import { getSession } from "next-auth/react";
 
 export default function Home() {
   const title = process.env.NEXT_PUBLIC_SITE_TITLE || "Your TCG Collection";
@@ -18,6 +19,16 @@ export default function Home() {
   const [cards, setCards] = useState<OwnedCardViewModel[]>([]);
   const [, setIsAddModalOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+
+  useEffect(() => {
+    const loadSession = async () => {
+      const session = await getSession();
+      setIsLoggedIn(!!session?.user?.email);
+    };
+
+    loadSession();
+  }, []);
 
   useEffect(() => {
     let isMounted = true;
@@ -105,16 +116,18 @@ export default function Home() {
         <div className="mt-8 flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
           <SearchBar value={searchQuery} onChange={setSearchQuery} />
 
-          <button
-            onClick={() => setIsAddModalOpen(true)}
-            className="px-6 py-3 bg-primary text-primary-foreground rounded-lg
+          {isLoggedIn ? (
+            <button
+              onClick={() => setIsAddModalOpen(true)}
+              className="px-6 py-3 bg-primary text-primary-foreground rounded-lg
                      flex items-center gap-2 shadow-lg hover:scale-105
                      transition-transform duration-200"
-            style={{ fontFamily: "var(--font-display)" }}
-          >
-            <Plus className="w-5 h-5" />
-            ADD CARD
-          </button>
+              style={{ fontFamily: "var(--font-display)" }}
+            >
+              <Plus className="w-5 h-5" />
+              ADD CARD
+            </button>
+          ) : null}
         </div>
 
         {/* Card Grid */}
