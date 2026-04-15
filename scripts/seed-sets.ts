@@ -29,7 +29,12 @@ async function loadSetSeedData(): Promise<SetSeedInput[]> {
     throw new Error("Expected sets file to contain an array.");
   }
 
-  return parsed.map((item) => ({
+  const filtered = parsed.filter((item) => {
+    const legalities = item.legalities as Record<string, unknown> | undefined;
+    return legalities?.standard !== undefined;
+  });
+
+  return filtered.map((item) => ({
     id: String(item.id ?? ""),
     name: String(item.name ?? ""),
     series: String(item.series ?? ""),
