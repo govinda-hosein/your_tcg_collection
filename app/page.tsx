@@ -95,7 +95,7 @@ export default function Home() {
   const titleEnd = words.slice(splitIndex).join(" ");
 
   const [cards, setCards] = useState<PokemonCard[]>(INITIAL_CARDS);
-  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [, setIsAddModalOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
 
   const filteredCards = cards.filter((card) => {
@@ -104,14 +104,6 @@ export default function Home() {
       card.set.toLowerCase().includes(searchQuery.toLowerCase());
     return matchesSearch;
   });
-
-  const handleAddCard = (newCard: Omit<PokemonCard, "id">) => {
-    const card: PokemonCard = {
-      ...newCard,
-      id: Date.now().toString(),
-    };
-    setCards([...cards, card]);
-  };
 
   const handleDeleteCard = (id: string) => {
     setCards(cards.filter((card) => card.id !== id));

@@ -36,7 +36,7 @@ export function CardGrid({ cards, onDelete, onUpdate }: CardGridProps) {
         <div className="mb-6 flex items-center gap-3">
           <div className="flex-1 h-0.5 bg-linear-to-r from-transparent via-border to-transparent" />
           <span className="text-sm uppercase tracking-widest text-muted-foreground px-4">
-            Collection
+            My Collection
           </span>
           <div className="flex-1 h-0.5 bg-linear-to-r from-transparent via-border to-transparent" />
         </div>
