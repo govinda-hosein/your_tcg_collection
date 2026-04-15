@@ -31,8 +31,17 @@ const pokemonCardSchema = new Schema(
   },
   {
     versionKey: false,
+    toJSON: { virtuals: true },
+    toObject: { virtuals: true },
   },
 );
+
+pokemonCardSchema.virtual("set", {
+  ref: "Set",
+  localField: "setId",
+  foreignField: "id",
+  justOne: true,
+});
 
 export type PokemonCardDocument = InferSchemaType<typeof pokemonCardSchema>;
 export type PokemonCardModelType = Model<PokemonCardDocument>;
