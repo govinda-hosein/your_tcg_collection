@@ -1,5 +1,6 @@
 import type { OwnedCardViewModel } from "@/database/ownedCard.model";
 import { Trash2 } from "lucide-react";
+import Image from "next/image";
 
 interface CardItemProps {
   card: OwnedCardViewModel;
@@ -90,7 +91,13 @@ export function CardItem({ card, onClick, onDelete, index }: CardItemProps) {
         <div className={`aspect-2/3  relative overflow-hidden`}>
           {/* Placeholder Pokemon Silhouette */}
           <div className="absolute inset-0 flex items-center justify-center">
-            <img src={card.imageUrl || "/placeholder.png"} alt={card.name} />
+            <Image
+              src={card.imageUrl || "/placeholder.png"}
+              alt={card.name}
+              fill
+              sizes="(max-width: 640px) 100vw, (max-width: 1280px) 33vw, 25vw"
+              className="object-cover"
+            />
           </div>
 
           {/* Quantity Badge */}
