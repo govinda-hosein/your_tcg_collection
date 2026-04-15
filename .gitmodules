@@ -1,0 +1,3 @@
+[submodule "external/pokemon-tcg-data"]
+	path = external/pokemon-tcg-data
+	url = https://github.com/govinda-hosein/pokemon-tcg-data.git
