@@ -9,6 +9,7 @@ type PopulatedOwnedCardRecord = {
     id: string;
     name: string;
     number: string;
+    regulationMark: string;
     rarity?: string;
     types?: string[];
     images?: {
@@ -59,10 +60,11 @@ export async function GET() {
           name: card.name,
           set: card.set?.name ?? "Unknown Set",
           number: card.number,
+          regulationMark: card.regulationMark,
           rarity: toRarity(card.rarity),
           condition: "Near Mint",
           quantity: ownedCard.quantity,
-          imageUrl: card.images?.large,
+          images: card.images,
           type: card.types?.[0],
         };
       });

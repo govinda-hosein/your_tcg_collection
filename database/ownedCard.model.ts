@@ -38,8 +38,9 @@ export type OwnedCardViewModel = Pick<OwnedCardDocument, "quantity"> & {
   set: SetDocument["name"] | "Unknown Set";
   number: PokemonCardDocument["number"];
   rarity: PokemonCardDocument["rarity"];
+  regulationMark: PokemonCardDocument["regulationMark"];
   condition: CardCondition;
-  imageUrl?: PokemonCardDocument["images"]["small"];
+  images?: PokemonCardDocument["images"];
   type?: PokemonCardDocument["types"][number];
 };
 

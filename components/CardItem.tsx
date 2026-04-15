@@ -92,7 +92,7 @@ export function CardItem({ card, onClick, onDelete, index }: CardItemProps) {
           {/* Placeholder Pokemon Silhouette */}
           <div className="absolute inset-0 flex items-center justify-center">
             <Image
-              src={card.imageUrl || "/placeholder.png"}
+              src={card.images?.small || "/placeholder.png"}
               alt={card.name}
               fill
               sizes="(max-width: 640px) 100vw, (max-width: 1280px) 33vw, 25vw"
