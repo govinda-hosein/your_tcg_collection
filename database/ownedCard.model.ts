@@ -32,16 +32,17 @@ export type CardCondition =
   | "Played"
   | "Poor";
 
-export type OwnedCardViewModel = Pick<OwnedCardDocument, "quantity"> & {
-  id: PokemonCardDocument["id"];
-  name: PokemonCardDocument["name"];
-  set: SetDocument["name"] | "Unknown Set";
-  number: PokemonCardDocument["number"];
-  rarity: PokemonCardDocument["rarity"];
-  regulationMark: PokemonCardDocument["regulationMark"];
+export type OwnedCardViewModel = Pick<
+  OwnedCardDocument,
+  "cardId" | "quantity"
+> & {
   condition: CardCondition;
-  images?: PokemonCardDocument["images"];
-  type?: PokemonCardDocument["types"][number];
+  card?: Pick<
+    PokemonCardDocument,
+    "id" | "name" | "number" | "regulationMark" | "rarity" | "types" | "images"
+  > & {
+    set?: Pick<SetDocument, "name">;
+  };
 };
 
 const OwnedCardModel =

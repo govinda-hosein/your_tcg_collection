@@ -32,12 +32,13 @@ const typeColors: Record<string, string> = {
 };
 
 export function CardItem({ card, onClick, onDelete, index }: CardItemProps) {
+  const pokemonCard = card.card;
   const rarityGradient =
-    rarityColors[card.rarity] || "from-gray-300 to-gray-200";
+    rarityColors[pokemonCard?.rarity ?? ""] || "from-gray-300 to-gray-200";
   const isHolo =
-    card.rarity.includes("Holo") ||
-    card.rarity.includes("Ultra") ||
-    card.rarity.includes("Secret");
+    pokemonCard?.rarity?.includes("Holo") ||
+    pokemonCard?.rarity?.includes("Ultra") ||
+    pokemonCard?.rarity?.includes("Secret");
   return (
     <div
       className="group relative cursor-pointer"
@@ -92,8 +93,8 @@ export function CardItem({ card, onClick, onDelete, index }: CardItemProps) {
           {/* Placeholder Pokemon Silhouette */}
           <div className="absolute inset-0 flex items-center justify-center">
             <Image
-              src={card.images?.small || "/placeholder.png"}
-              alt={card.name}
+              src={pokemonCard?.images?.small || "/placeholder.png"}
+              alt={pokemonCard?.name || "Pokemon Card"}
               fill
               sizes="(max-width: 640px) 100vw, (max-width: 1280px) 33vw, 25vw"
               className="object-cover"
@@ -114,28 +115,32 @@ export function CardItem({ card, onClick, onDelete, index }: CardItemProps) {
         {/* Card Info */}
         <div className="p-3 bg-white">
           <div className="flex items-center justify-between text-xs text-muted-foreground mb-2">
-            <h3 className="font-bold text-sm mb-1 truncate">{card.name}</h3>
+            <h3 className="font-bold text-sm mb-1 truncate">
+              {pokemonCard?.name || "Unknown Card"}
+            </h3>
             {/* Type Badge */}
-            {card.type && (
+            {pokemonCard?.types?.[0] && (
               <div
                 className="px-2 py-1 rounded-md text-xs font-bold text-white shadow-lg"
-                style={{ backgroundColor: typeColors[card.type] || "#666" }}
+                style={{
+                  backgroundColor: typeColors[pokemonCard.types[0]] || "#666",
+                }}
               >
-                {card.type}
+                {pokemonCard.types[0]}
               </div>
             )}
           </div>
 
           <div className="flex items-center justify-between text-xs text-muted-foreground">
-            <span>{card.set}</span>
-            <span>{card.number}</span>
+            <span>{pokemonCard?.set?.name || "Unknown Set"}</span>
+            <span>{pokemonCard?.number || "-"}</span>
           </div>
           <div className="mt-2 flex items-center justify-between">
             <span
               className={`text-xs px-2 py-0.5 rounded-full bg-linear-to-r ${rarityGradient}
                            text-white font-medium`}
             >
-              {card.rarity}
+              {pokemonCard?.rarity || "Rare"}
             </span>
             <span className="text-xs text-muted-foreground">
               {card.condition}
@@ -147,7 +152,7 @@ export function CardItem({ card, onClick, onDelete, index }: CardItemProps) {
         <button
           onClick={(e) => {
             e.stopPropagation();
-            onDelete(card.id);
+            onDelete(card.cardId);
           }}
           className="absolute top-2 right-2 p-2 bg-destructive text-destructive-foreground
                    rounded-full opacity-0 group-hover:opacity-100

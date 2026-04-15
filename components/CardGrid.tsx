@@ -62,7 +62,7 @@ export function CardGrid({ cards, onDelete, onUpdate }: CardGridProps) {
           <div className="pl-12 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
             {cards.map((card, index) => (
               <CardItem
-                key={card.id}
+                key={card.cardId}
                 card={card}
                 onClick={() => setSelectedCard(card)}
                 onDelete={onDelete}
@@ -79,11 +79,11 @@ export function CardGrid({ cards, onDelete, onUpdate }: CardGridProps) {
           card={selectedCard}
           onClose={() => setSelectedCard(null)}
           onUpdate={(updates) => {
-            onUpdate(selectedCard.id, updates);
+            onUpdate(selectedCard.cardId, updates);
             setSelectedCard({ ...selectedCard, ...updates });
           }}
           onDelete={() => {
-            onDelete(selectedCard.id);
+            onDelete(selectedCard.cardId);
             setSelectedCard(null);
           }}
         />

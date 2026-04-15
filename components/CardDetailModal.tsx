@@ -30,6 +30,7 @@ export function CardDetailModal({
 }: CardDetailModalProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [editData, setEditData] = useState(card);
+  const pokemonCard = card.card;
 
   const handleSave = () => {
     onUpdate(editData);
@@ -37,7 +38,7 @@ export function CardDetailModal({
   };
 
   const rarityGradient =
-    rarityColors[card.rarity] || "from-gray-300 to-gray-200";
+    rarityColors[pokemonCard?.rarity ?? ""] || "from-gray-300 to-gray-200";
 
   return (
     <div
@@ -77,9 +78,9 @@ export function CardDetailModal({
             </div>
 
             {/* Holographic Animation */}
-            {(card.rarity.includes("Holo") ||
-              card.rarity.includes("Ultra") ||
-              card.rarity.includes("Secret")) && (
+            {(pokemonCard?.rarity?.includes("Holo") ||
+              pokemonCard?.rarity?.includes("Ultra") ||
+              pokemonCard?.rarity?.includes("Secret")) && (
               <div
                 className="absolute inset-0 opacity-40"
                 style={{
@@ -109,7 +110,9 @@ export function CardDetailModal({
             <div className="absolute bottom-4 left-4 right-4 text-center">
               <div className="bg-black/50 backdrop-blur-sm rounded-lg px-4 py-2 text-white">
                 <div className="text-xs opacity-70">Set Number</div>
-                <div className="text-lg font-bold">{card.number}</div>
+                <div className="text-lg font-bold">
+                  {pokemonCard?.number || "-"}
+                </div>
               </div>
             </div>
           </div>
@@ -124,25 +127,29 @@ export function CardDetailModal({
                     className="text-3xl mb-2"
                     style={{ fontFamily: "var(--font-display)" }}
                   >
-                    {card.name}
+                    {pokemonCard?.name || "Unknown Card"}
                   </h2>
                   <div
                     className={`inline-block px-3 py-1 rounded-full text-sm
                                  bg-linear-to-r ${rarityGradient} text-white font-bold mb-4`}
                   >
-                    {card.rarity}
+                    {pokemonCard?.rarity || "Rare"}
                   </div>
 
                   <div className="space-y-3 mt-6">
                     <div className="flex items-center justify-between py-2 border-b border-border">
                       <span className="text-muted-foreground">Set</span>
-                      <span className="font-medium">{card.set}</span>
+                      <span className="font-medium">
+                        {pokemonCard?.set?.name || "Unknown Set"}
+                      </span>
                     </div>
 
-                    {card.type && (
+                    {pokemonCard?.types?.[0] && (
                       <div className="flex items-center justify-between py-2 border-b border-border">
                         <span className="text-muted-foreground">Type</span>
-                        <span className="font-medium">{card.type}</span>
+                        <span className="font-medium">
+                          {pokemonCard.types[0]}
+                        </span>
                       </div>
                     )}
 
@@ -197,9 +204,14 @@ export function CardDetailModal({
                     <label className="block text-sm mb-1">Card Name</label>
                     <input
                       type="text"
-                      value={editData.name}
+                      value={editData.card?.name || ""}
                       onChange={(e) =>
-                        setEditData({ ...editData, name: e.target.value })
+                        setEditData({
+                          ...editData,
+                          card: editData.card
+                            ? { ...editData.card, name: e.target.value }
+                            : editData.card,
+                        })
                       }
                       className="w-full px-4 py-2 bg-input-background border-2 border-border
                                rounded-lg focus:outline-none focus:border-primary"

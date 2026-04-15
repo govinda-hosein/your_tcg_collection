@@ -3,26 +3,9 @@ import type { OwnedCardViewModel } from "@/database/ownedCard.model";
 import connectDB from "@/lib/mongodb";
 import { NextResponse } from "next/server";
 
-type PopulatedOwnedCardRecord = {
-  quantity: number;
-  card?: {
-    id: string;
-    name: string;
-    number: string;
-    regulationMark: string;
-    rarity?: string;
-    types?: string[];
-    images?: {
-      small: string;
-      large: string;
-    };
-    set?: {
-      name?: string;
-    };
-  };
-};
+type OwnedCardRarity = NonNullable<OwnedCardViewModel["card"]>["rarity"];
 
-const VALID_RARITIES: OwnedCardViewModel["rarity"][] = [
+const VALID_RARITIES: OwnedCardRarity[] = [
   "Common",
   "Uncommon",
   "Rare",
@@ -31,9 +14,9 @@ const VALID_RARITIES: OwnedCardViewModel["rarity"][] = [
   "Secret Rare",
 ];
 
-function toRarity(value?: string): OwnedCardViewModel["rarity"] {
-  return VALID_RARITIES.includes(value as OwnedCardViewModel["rarity"])
-    ? (value as OwnedCardViewModel["rarity"])
+function toRarity(value?: string): OwnedCardRarity {
+  return VALID_RARITIES.includes(value as OwnedCardRarity)
+    ? (value as OwnedCardRarity)
     : "Rare";
 }
 
@@ -48,7 +31,7 @@ export async function GET() {
           select: "name",
         },
       })
-      .lean<PopulatedOwnedCardRecord[]>();
+      .lean<OwnedCardViewModel[]>();
 
     const response: OwnedCardViewModel[] = ownedCards
       .filter((ownedCard) => ownedCard.card)
@@ -56,16 +39,21 @@ export async function GET() {
         const card = ownedCard.card!;
 
         return {
-          id: card.id,
-          name: card.name,
-          set: card.set?.name ?? "Unknown Set",
-          number: card.number,
-          regulationMark: card.regulationMark,
-          rarity: toRarity(card.rarity),
+          cardId: ownedCard.cardId,
+          card: {
+            id: card.id,
+            name: card.name,
+            number: card.number,
+            regulationMark: card.regulationMark,
+            rarity: toRarity(card.rarity),
+            types: card.types,
+            images: card.images,
+            set: {
+              name: card.set?.name ?? "Unknown Set",
+            },
+          },
           condition: "Near Mint",
           quantity: ownedCard.quantity,
-          images: card.images,
-          type: card.types?.[0],
         };
       });
 

@@ -49,14 +49,15 @@ export default function Home() {
   }, []);
 
   const filteredCards = cards.filter((card) => {
-    const matchesSearch =
-      card.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      card.set.toLowerCase().includes(searchQuery.toLowerCase());
+    const cardName = card.card?.name?.toLowerCase() ?? "";
+    const setName = card.card?.set?.name?.toLowerCase() ?? "";
+    const query = searchQuery.toLowerCase();
+    const matchesSearch = cardName.includes(query) || setName.includes(query);
     return matchesSearch;
   });
 
   const handleDeleteCard = (id: string) => {
-    setCards(cards.filter((card) => card.id !== id));
+    setCards(cards.filter((card) => card.cardId !== id));
   };
 
   const handleUpdateCard = (
@@ -64,7 +65,9 @@ export default function Home() {
     updates: Partial<OwnedCardViewModel>,
   ) => {
     setCards(
-      cards.map((card) => (card.id === id ? { ...card, ...updates } : card)),
+      cards.map((card) =>
+        card.cardId === id ? { ...card, ...updates } : card,
+      ),
     );
   };
 
