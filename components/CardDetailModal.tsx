@@ -1,12 +1,15 @@
+import type {
+  CardCondition,
+  OwnedCardViewModel,
+} from "@/database/ownedCard.model";
 import { Edit2, Save, Trash2, X } from "lucide-react";
 
-import { PokemonCard } from "@/app/page";
 import { useState } from "react";
 
 interface CardDetailModalProps {
-  card: PokemonCard;
+  card: OwnedCardViewModel;
   onClose: () => void;
-  onUpdate: (updates: Partial<PokemonCard>) => void;
+  onUpdate: (updates: Partial<OwnedCardViewModel>) => void;
   onDelete: () => void;
 }
 
@@ -210,7 +213,7 @@ export function CardDetailModal({
                       onChange={(e) =>
                         setEditData({
                           ...editData,
-                          condition: e.target.value as PokemonCard["condition"],
+                          condition: e.target.value as CardCondition,
                         })
                       }
                       className="w-full px-4 py-2 bg-input-background border-2 border-border

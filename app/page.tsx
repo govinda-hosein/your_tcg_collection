@@ -1,91 +1,12 @@
 "use client";
 
+import { useEffect, useState } from "react";
+
 import { CardGrid } from "@/components/CardGrid";
 import { CollectionStats } from "@/components/CollectionStats";
 import { SearchBar } from "@/components/SearchBar";
+import type { OwnedCardViewModel } from "@/database/ownedCard.model";
 import { Plus } from "lucide-react";
-import { useState } from "react";
-
-export interface PokemonCard {
-  id: string;
-  name: string;
-  set: string;
-  number: string;
-  rarity:
-    | "Common"
-    | "Uncommon"
-    | "Rare"
-    | "Holo Rare"
-    | "Ultra Rare"
-    | "Secret Rare";
-  condition: "Mint" | "Near Mint" | "Excellent" | "Good" | "Played" | "Poor";
-  quantity: number;
-  imageUrl?: string;
-  type?: string;
-}
-
-const INITIAL_CARDS: PokemonCard[] = [
-  {
-    id: "1",
-    name: "Charizard",
-    set: "Base Set",
-    number: "4/102",
-    rarity: "Holo Rare",
-    condition: "Near Mint",
-    quantity: 1,
-    type: "Fire",
-  },
-  {
-    id: "2",
-    name: "Pikachu",
-    set: "Base Set",
-    number: "58/102",
-    rarity: "Common",
-    condition: "Excellent",
-    quantity: 3,
-    type: "Electric",
-  },
-  {
-    id: "3",
-    name: "Blastoise",
-    set: "Base Set",
-    number: "2/102",
-    rarity: "Holo Rare",
-    condition: "Mint",
-    quantity: 1,
-    type: "Water",
-  },
-  {
-    id: "4",
-    name: "Mewtwo",
-    set: "Base Set",
-    number: "10/102",
-    rarity: "Holo Rare",
-    condition: "Near Mint",
-    quantity: 2,
-    type: "Psychic",
-  },
-  {
-    id: "5",
-    name: "Gyarados",
-    set: "Base Set",
-    number: "6/102",
-    rarity: "Holo Rare",
-    condition: "Excellent",
-    quantity: 1,
-    type: "Water",
-  },
-  {
-    id: "6",
-    name: "Alakazam",
-    set: "Base Set",
-    number: "1/102",
-    rarity: "Holo Rare",
-    condition: "Near Mint",
-    quantity: 1,
-    type: "Psychic",
-  },
-];
 
 export default function Home() {
   const title = process.env.NEXT_PUBLIC_SITE_TITLE || "Your TCG Collection";
@@ -94,9 +15,38 @@ export default function Home() {
   const titleStart = words.slice(0, splitIndex).join(" ");
   const titleEnd = words.slice(splitIndex).join(" ");
 
-  const [cards, setCards] = useState<PokemonCard[]>(INITIAL_CARDS);
+  const [cards, setCards] = useState<OwnedCardViewModel[]>([]);
   const [, setIsAddModalOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+
+  useEffect(() => {
+    let isMounted = true;
+
+    const loadOwnedCards = async () => {
+      try {
+        const response = await fetch("/api/owned-cards", { cache: "no-store" });
+
+        if (!response.ok) {
+          throw new Error("Failed to fetch owned cards");
+        }
+        const data = (await response.json()) as OwnedCardViewModel[];
+
+        if (!isMounted) {
+          return;
+        }
+
+        setCards(data);
+      } catch (error) {
+        console.error("Error loading owned cards:", error);
+      }
+    };
+
+    loadOwnedCards();
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   const filteredCards = cards.filter((card) => {
     const matchesSearch =
@@ -109,7 +59,10 @@ export default function Home() {
     setCards(cards.filter((card) => card.id !== id));
   };
 
-  const handleUpdateCard = (id: string, updates: Partial<PokemonCard>) => {
+  const handleUpdateCard = (
+    id: string,
+    updates: Partial<OwnedCardViewModel>,
+  ) => {
     setCards(
       cards.map((card) => (card.id === id ? { ...card, ...updates } : card)),
     );

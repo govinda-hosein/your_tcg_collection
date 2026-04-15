@@ -1,5 +1,8 @@
 import { InferSchemaType, Model, Schema, model, models } from "mongoose";
 
+import { PokemonCardDocument } from "./pokemonCard.model";
+import { SetDocument } from "./set.model";
+
 const ownedCardSchema = new Schema(
   {
     cardId: { type: String, required: true, trim: true, index: true },
@@ -21,6 +24,24 @@ ownedCardSchema.virtual("card", {
 
 export type OwnedCardDocument = InferSchemaType<typeof ownedCardSchema>;
 export type OwnedCardModelType = Model<OwnedCardDocument>;
+export type CardCondition =
+  | "Mint"
+  | "Near Mint"
+  | "Excellent"
+  | "Good"
+  | "Played"
+  | "Poor";
+
+export type OwnedCardViewModel = Pick<OwnedCardDocument, "quantity"> & {
+  id: PokemonCardDocument["id"];
+  name: PokemonCardDocument["name"];
+  set: SetDocument["name"] | "Unknown Set";
+  number: PokemonCardDocument["number"];
+  rarity: PokemonCardDocument["rarity"];
+  condition: CardCondition;
+  imageUrl?: PokemonCardDocument["images"]["small"];
+  type?: PokemonCardDocument["types"][number];
+};
 
 const OwnedCardModel =
   (models.OwnedCard as OwnedCardModelType) ||

@@ -1,8 +1,8 @@
-import { PokemonCard } from "@/app/page";
+import type { OwnedCardViewModel } from "@/database/ownedCard.model";
 import { Trash2 } from "lucide-react";
 
 interface CardItemProps {
-  card: PokemonCard;
+  card: OwnedCardViewModel;
   onClick: () => void;
   onDelete: (id: string) => void;
   index: number;
@@ -37,7 +37,6 @@ export function CardItem({ card, onClick, onDelete, index }: CardItemProps) {
     card.rarity.includes("Holo") ||
     card.rarity.includes("Ultra") ||
     card.rarity.includes("Secret");
-
   return (
     <div
       className="group relative cursor-pointer"
@@ -91,10 +90,7 @@ export function CardItem({ card, onClick, onDelete, index }: CardItemProps) {
         <div className={`aspect-2/3  relative overflow-hidden`}>
           {/* Placeholder Pokemon Silhouette */}
           <div className="absolute inset-0 flex items-center justify-center">
-            <img
-              src="https://tcgplayer-cdn.tcgplayer.com/product/656257_in_1000x1000.jpg"
-              alt="Pokemon Card"
-            />
+            <img src={card.imageUrl || "/placeholder.png"} alt={card.name} />
           </div>
 
           {/* Quantity Badge */}

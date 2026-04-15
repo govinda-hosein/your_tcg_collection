@@ -1,16 +1,18 @@
-import { PokemonCard } from "@/app/page";
+import type { OwnedCardViewModel } from "@/database/ownedCard.model";
 import { useState } from "react";
 import { CardDetailModal } from "./CardDetailModal";
 import { CardItem } from "./CardItem";
 
 interface CardGridProps {
-  cards: PokemonCard[];
+  cards: OwnedCardViewModel[];
   onDelete: (id: string) => void;
-  onUpdate: (id: string, updates: Partial<PokemonCard>) => void;
+  onUpdate: (id: string, updates: Partial<OwnedCardViewModel>) => void;
 }
 
 export function CardGrid({ cards, onDelete, onUpdate }: CardGridProps) {
-  const [selectedCard, setSelectedCard] = useState<PokemonCard | null>(null);
+  const [selectedCard, setSelectedCard] = useState<OwnedCardViewModel | null>(
+    null,
+  );
 
   if (cards.length === 0) {
     return (
