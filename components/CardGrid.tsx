@@ -34,7 +34,7 @@ export function CardGrid({
           No Cards Found
         </h3>
         <p className="text-muted-foreground">
-          Start building your collection by adding your first card!
+          Try updating your search or filter criteria
         </p>
       </div>
     );

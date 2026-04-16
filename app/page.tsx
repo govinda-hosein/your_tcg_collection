@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 
 import { CardGrid } from "@/components/CardGrid";
 import { CollectionStats } from "@/components/CollectionStats";
+import { RaritySelect } from "@/components/RaritySelect";
 import { SearchBar } from "@/components/SearchBar";
 import type { OwnedCardViewModel } from "@/database/ownedCard.model";
 import { LogOut, Plus } from "lucide-react";
@@ -18,24 +19,25 @@ export default function Home() {
 
   const [cards, setCards] = useState<OwnedCardViewModel[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
+  const [selectedRarity, setSelectedRarity] = useState("");
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+
+  const fetchCards = async (rarity?: string) => {
+    const url = rarity
+      ? `/api/owned-cards?rarity=${encodeURIComponent(rarity)}`
+      : "/api/owned-cards";
+    const response = await fetch(url, { cache: "no-store" });
+    if (!response.ok) throw new Error("Failed to fetch owned cards");
+    return (await response.json()) as OwnedCardViewModel[];
+  };
 
   useEffect(() => {
     let isMounted = true;
 
     const loadData = async () => {
       try {
-        const [session, cardsResponse] = await Promise.all([
-          getSession(),
-          fetch("/api/owned-cards", { cache: "no-store" }),
-        ]);
-
-        if (!cardsResponse.ok) {
-          throw new Error("Failed to fetch owned cards");
-        }
-
-        const data = (await cardsResponse.json()) as OwnedCardViewModel[];
+        const [session, data] = await Promise.all([getSession(), fetchCards()]);
 
         if (!isMounted) return;
 
@@ -55,12 +57,23 @@ export default function Home() {
     };
   }, []);
 
+  const handleRarityChange = async (rarity: string) => {
+    setSelectedRarity(rarity);
+    setSearchQuery("");
+    try {
+      const data = await fetchCards(rarity || undefined);
+      setCards(data);
+    } catch (error) {
+      console.error("Error filtering by rarity:", error);
+    }
+  };
+
   const filteredCards = cards.filter((card) => {
+    if (!searchQuery) return true;
     const cardName = card.card?.name?.toLowerCase() ?? "";
     const setName = card.card?.set?.name?.toLowerCase() ?? "";
     const query = searchQuery.toLowerCase();
-    const matchesSearch = cardName.includes(query) || setName.includes(query);
-    return matchesSearch;
+    return cardName.includes(query) || setName.includes(query);
   });
 
   const handleDeleteCard = async (id: string) => {
@@ -179,7 +192,13 @@ export default function Home() {
 
         {/* Controls */}
         <div className="mt-8 flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
-          <SearchBar value={searchQuery} onChange={setSearchQuery} />
+          <div className="flex-1 flex flex-col sm:flex-row gap-3 items-start sm:items-center">
+            <SearchBar value={searchQuery} onChange={setSearchQuery} />
+            <RaritySelect
+              value={selectedRarity}
+              onChange={handleRarityChange}
+            />
+          </div>
 
           {isLoggedIn ? (
             <a
