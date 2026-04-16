@@ -59,7 +59,7 @@ export async function GET() {
 
     return NextResponse.json(response, { status: 200 });
   } catch (e) {
-    console.log(e);
+    console.error(e);
     return NextResponse.json(
       { error: "An error occurred while fetching owned cards" },
       { status: 500 },

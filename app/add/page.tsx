@@ -38,7 +38,7 @@ export default function AddCardPage() {
       }
 
       const cards = (await response.json()) as PokemonCardViewModel[];
-      console.log(cards);
+
       setSearchResults(cards);
     } catch {
       setSearchResults([]);
