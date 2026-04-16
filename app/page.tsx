@@ -19,39 +19,36 @@ export default function Home() {
   const [cards, setCards] = useState<OwnedCardViewModel[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [isLoggedIn, setIsLoggedIn] = useState(false);
-
-  useEffect(() => {
-    const loadSession = async () => {
-      const session = await getSession();
-      setIsLoggedIn(!!session?.user?.email);
-    };
-
-    loadSession();
-  }, []);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     let isMounted = true;
 
-    const loadOwnedCards = async () => {
+    const loadData = async () => {
       try {
-        const response = await fetch("/api/owned-cards", { cache: "no-store" });
+        const [session, cardsResponse] = await Promise.all([
+          getSession(),
+          fetch("/api/owned-cards", { cache: "no-store" }),
+        ]);
 
-        if (!response.ok) {
+        if (!cardsResponse.ok) {
           throw new Error("Failed to fetch owned cards");
         }
-        const data = (await response.json()) as OwnedCardViewModel[];
 
-        if (!isMounted) {
-          return;
-        }
+        const data = (await cardsResponse.json()) as OwnedCardViewModel[];
 
+        if (!isMounted) return;
+
+        setIsLoggedIn(!!session?.user?.email);
         setCards(data);
       } catch (error) {
-        console.error("Error loading owned cards:", error);
+        console.error("Error loading data:", error);
+      } finally {
+        if (isMounted) setIsLoading(false);
       }
     };
 
-    loadOwnedCards();
+    loadData();
 
     return () => {
       isMounted = false;
@@ -119,6 +116,22 @@ export default function Home() {
       console.error("Error updating card quantity:", error);
     }
   };
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="flex flex-col items-center gap-4">
+          <div className="h-12 w-12 animate-spin rounded-full border-4 border-border border-t-primary" />
+          <p
+            className="text-muted-foreground text-sm tracking-widest uppercase"
+            style={{ fontFamily: "var(--font-display)" }}
+          >
+            Loading Collection...
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen relative overflow-hidden">
