@@ -1,9 +1,6 @@
-import type {
-  CardCondition,
-  OwnedCardViewModel,
-} from "@/database/ownedCard.model";
 import { Edit2, Save, Trash2, X } from "lucide-react";
 
+import type { OwnedCardViewModel } from "@/database/ownedCard.model";
 import { RARITY_COLORS } from "@/lib/constants";
 import Image from "next/image";
 import { useState } from "react";
@@ -38,7 +35,7 @@ export function CardDetailModal({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-4"
+      className="fixed inset-0 z-50 flex items-center justify-center p-3 md:p-6"
       onClick={onClose}
     >
       {/* Backdrop */}
@@ -46,8 +43,8 @@ export function CardDetailModal({
 
       {/* Modal */}
       <div
-        className="relative bg-card rounded-2xl shadow-2xl max-w-2xl w-full
-                    border-4 border-border overflow-hidden max-h-[90vh] overflow-y-auto"
+        className="relative bg-card rounded-2xl shadow-2xl max-w-6xl w-full
+                    border-4 border-border overflow-hidden max-h-[94vh] overflow-y-auto"
         onClick={(e) => e.stopPropagation()}
         style={{
           animation: "modalZoomIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1)",
@@ -63,9 +60,9 @@ export function CardDetailModal({
         </button>
 
         {/* Card Display */}
-        <div className="grid md:grid-cols-2">
+        <div className="grid md:grid-cols-[1.2fr_1fr]">
           {/* Left: Card Image */}
-          <div className={`aspect-2/3  relative overflow-hidden`}>
+          <div className="aspect-2/3 relative overflow-hidden bg-black/5 md:aspect-auto md:h-[78vh]">
             <Image
               src={
                 pokemonCard?.images?.large ||
@@ -75,12 +72,12 @@ export function CardDetailModal({
               alt={pokemonCard?.name || "Pokemon Card"}
               fill
               sizes="(max-width: 768px) 100vw, 50vw"
-              className="object-contain"
+              className="object-contain p-4 md:p-6"
             />
           </div>
 
           {/* Right: Card Details */}
-          <div className="p-6 flex flex-col">
+          <div className="p-6 md:p-8 flex flex-col">
             {!isEditing ? (
               <>
                 {/* View Mode */}
@@ -163,48 +160,8 @@ export function CardDetailModal({
                     className="text-xl mb-4"
                     style={{ fontFamily: "var(--font-display)" }}
                   >
-                    EDIT CARD
+                    Change Quantity
                   </h3>
-
-                  <div>
-                    <label className="block text-sm mb-1">Card Name</label>
-                    <input
-                      type="text"
-                      value={editData.card?.name || ""}
-                      onChange={(e) =>
-                        setEditData({
-                          ...editData,
-                          card: editData.card
-                            ? { ...editData.card, name: e.target.value }
-                            : editData.card,
-                        })
-                      }
-                      className="w-full px-4 py-2 bg-input-background border-2 border-border
-                               rounded-lg focus:outline-none focus:border-primary"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-sm mb-1">Condition</label>
-                    <select
-                      value={editData.condition}
-                      onChange={(e) =>
-                        setEditData({
-                          ...editData,
-                          condition: e.target.value as CardCondition,
-                        })
-                      }
-                      className="w-full px-4 py-2 bg-input-background border-2 border-border
-                               rounded-lg focus:outline-none focus:border-primary cursor-pointer"
-                    >
-                      <option value="Mint">Mint</option>
-                      <option value="Near Mint">Near Mint</option>
-                      <option value="Excellent">Excellent</option>
-                      <option value="Good">Good</option>
-                      <option value="Played">Played</option>
-                      <option value="Poor">Poor</option>
-                    </select>
-                  </div>
 
                   <div>
                     <label className="block text-sm mb-1">Quantity</label>
