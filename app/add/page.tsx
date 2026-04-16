@@ -1,9 +1,10 @@
 "use client";
 
-import { ArrowLeft, Loader2, Search } from "lucide-react";
+import { ArrowLeft, Loader2, Search, X, ZoomIn } from "lucide-react";
 
 import { CardSearchResult } from "@/components/CardSearchResult";
 import type { PokemonCardViewModel } from "@/database";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
@@ -17,6 +18,7 @@ export default function AddCardPage() {
   const [selectedCard, setSelectedCard] = useState<PokemonCardViewModel | null>(
     null,
   );
+  const [isImageModalOpen, setIsImageModalOpen] = useState(false);
   const [quantity, setQuantity] = useState(1);
 
   const handleSearch = async (query: string) => {
@@ -65,6 +67,10 @@ export default function AddCardPage() {
     setSelectedCard(null);
     setQuantity(1);
     router.push("/");
+  };
+
+  const closeImageModal = () => {
+    setIsImageModalOpen(false);
   };
 
   return (
@@ -178,7 +184,28 @@ export default function AddCardPage() {
 
               {/* Card Preview */}
               <div className="bg-linear-to-br from-purple-100 to-pink-100 rounded-xl p-6 mb-6 border-2 border-border">
-                <div className="flex items-center justify-between">
+                <div className="flex items-center justify-between gap-6">
+                  <button
+                    type="button"
+                    onClick={() => setIsImageModalOpen(true)}
+                    className="relative h-48 w-36 shrink-0 overflow-hidden rounded-lg border-2 border-border bg-card shadow-md"
+                    aria-label={`Zoom image for ${selectedCard.name}`}
+                  >
+                    <Image
+                      src={selectedCard.images.large}
+                      alt={selectedCard.name}
+                      fill
+                      sizes="144px"
+                      className="object-cover"
+                    />
+                    <div
+                      className="absolute right-2 top-2 rounded-lg bg-black/60 p-2 text-white
+                               transition-colors duration-200 hover:bg-black/75"
+                      aria-hidden="true"
+                    >
+                      <ZoomIn className="h-4 w-4" />
+                    </div>
+                  </button>
                   <div>
                     <h3 className="text-2xl font-bold mb-1">
                       {selectedCard.name}
@@ -250,6 +277,39 @@ export default function AddCardPage() {
           </div>
         )}
       </div>
+
+      {selectedCard && isImageModalOpen && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center p-4"
+          onClick={closeImageModal}
+        >
+          <div className="absolute inset-0 bg-black/80 backdrop-blur-sm" />
+          <div
+            className="relative z-10 rounded-2xl border-4 border-border bg-card p-3 shadow-2xl"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <button
+              type="button"
+              onClick={closeImageModal}
+              className="absolute right-3 top-3 z-10 rounded-lg bg-black/60 p-2 text-white
+                       transition-colors duration-200 hover:bg-black/75"
+              aria-label="Close image preview"
+            >
+              <X className="h-5 w-5" />
+            </button>
+            <div className="relative aspect-2/3 h-[85vh] max-h-[85vh] max-w-[calc(100vw-2rem)] bg-black/10">
+              <Image
+                src={selectedCard.images.large}
+                alt={selectedCard.name}
+                fill
+                sizes="(max-width: 768px) 100vw, 768px"
+                className="object-contain"
+                priority
+              />
+            </div>
+          </div>
+        </div>
+      )}
 
       <style>{`
         @keyframes slideInUp {
