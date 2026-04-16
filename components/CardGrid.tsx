@@ -7,9 +7,15 @@ interface CardGridProps {
   cards: OwnedCardViewModel[];
   onDelete: (id: string) => void;
   onUpdate: (id: string, updates: Partial<OwnedCardViewModel>) => void;
+  isLoggedIn: boolean;
 }
 
-export function CardGrid({ cards, onDelete, onUpdate }: CardGridProps) {
+export function CardGrid({
+  cards,
+  onDelete,
+  onUpdate,
+  isLoggedIn,
+}: CardGridProps) {
   const [selectedCard, setSelectedCard] = useState<OwnedCardViewModel | null>(
     null,
   );
@@ -67,6 +73,7 @@ export function CardGrid({ cards, onDelete, onUpdate }: CardGridProps) {
                 onClick={() => setSelectedCard(card)}
                 onDelete={onDelete}
                 index={index}
+                isLoggedIn={isLoggedIn}
               />
             ))}
           </div>

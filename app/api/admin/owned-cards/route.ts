@@ -131,3 +131,25 @@ export async function POST(request: NextRequest) {
     );
   }
 }
+
+export async function DELETE(request: NextRequest) {
+  const { searchParams } = request.nextUrl;
+  const cardId = searchParams.get("cardId");
+
+  if (!cardId || typeof cardId !== "string" || cardId.trim() === "") {
+    return NextResponse.json({ error: "cardId is required" }, { status: 400 });
+  }
+
+  await connectDB();
+
+  const deleted = await OwnedCard.findOneAndDelete({ cardId: cardId.trim() });
+
+  if (!deleted) {
+    return NextResponse.json(
+      { error: "Owned card not found" },
+      { status: 404 },
+    );
+  }
+
+  return new NextResponse(null, { status: 204 });
+}

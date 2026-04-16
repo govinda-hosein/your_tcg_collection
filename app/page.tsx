@@ -134,6 +134,7 @@ export default function Home() {
           cards={filteredCards}
           onDelete={handleDeleteCard}
           onUpdate={handleUpdateCard}
+          isLoggedIn={isLoggedIn}
         />
       </div>
     </div>

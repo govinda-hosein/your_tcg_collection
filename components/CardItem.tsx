@@ -8,6 +8,7 @@ interface CardItemProps {
   onClick: () => void;
   onDelete: (id: string) => void;
   index: number;
+  isLoggedIn: boolean;
 }
 
 const typeColors: Record<string, string> = {
@@ -23,7 +24,13 @@ const typeColors: Record<string, string> = {
   Fairy: "#ffc6ff",
 };
 
-export function CardItem({ card, onClick, onDelete, index }: CardItemProps) {
+export function CardItem({
+  card,
+  onClick,
+  onDelete,
+  index,
+  isLoggedIn,
+}: CardItemProps) {
   const pokemonCard = card.card;
   const rarityGradient =
     RARITY_COLORS[pokemonCard?.rarity ?? ""] || "from-gray-300 to-gray-200";
@@ -138,18 +145,20 @@ export function CardItem({ card, onClick, onDelete, index }: CardItemProps) {
         </div>
 
         {/* Delete Button */}
-        <button
-          onClick={(e) => {
-            e.stopPropagation();
-            onDelete(card.cardId);
-          }}
-          className="absolute top-2 right-2 p-2 bg-destructive text-destructive-foreground
-                   rounded-full opacity-0 group-hover:opacity-100
-                   hover:scale-110 transition-all duration-200 shadow-lg z-10"
-          aria-label="Delete card"
-        >
-          <Trash2 className="w-4 h-4" />
-        </button>
+        {isLoggedIn ? (
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              onDelete(card.cardId);
+            }}
+            className="absolute top-2 right-2 p-2 bg-destructive text-destructive-foreground
+                     rounded-full opacity-0 group-hover:opacity-100
+                     hover:scale-110 transition-all duration-200 shadow-lg z-10"
+            aria-label="Delete card"
+          >
+            <Trash2 className="w-4 h-4" />
+          </button>
+        ) : null}
       </div>
 
       <style>{`
