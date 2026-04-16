@@ -5,6 +5,7 @@ import type {
 import { Edit2, Save, Trash2, X } from "lucide-react";
 
 import { RARITY_COLORS } from "@/lib/constants";
+import Image from "next/image";
 import { useState } from "react";
 
 interface CardDetailModalProps {
@@ -12,6 +13,7 @@ interface CardDetailModalProps {
   onClose: () => void;
   onUpdate: (updates: Partial<OwnedCardViewModel>) => void;
   onDelete: () => void;
+  isLoggedIn: boolean;
 }
 
 export function CardDetailModal({
@@ -19,9 +21,11 @@ export function CardDetailModal({
   onClose,
   onUpdate,
   onDelete,
+  isLoggedIn,
 }: CardDetailModalProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [editData, setEditData] = useState(card);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const pokemonCard = card.card;
 
   const handleSave = () => {
@@ -61,52 +65,18 @@ export function CardDetailModal({
         {/* Card Display */}
         <div className="grid md:grid-cols-2">
           {/* Left: Card Image */}
-          <div
-            className={`aspect-2/3 bg-linear-to-br ${rarityGradient} relative overflow-hidden`}
-          >
-            {/* Placeholder Pokemon Silhouette */}
-            <div className="absolute inset-0 flex items-center justify-center">
-              <div className="text-9xl opacity-20">⚡</div>
-            </div>
-
-            {/* Holographic Animation */}
-            {(pokemonCard?.rarity?.includes("Holo") ||
-              pokemonCard?.rarity?.includes("Ultra") ||
-              pokemonCard?.rarity?.includes("Secret")) && (
-              <div
-                className="absolute inset-0 opacity-40"
-                style={{
-                  background: `
-                       repeating-linear-gradient(
-                         45deg,
-                         transparent,
-                         transparent 20px,
-                         rgba(255, 255, 255, 0.2) 20px,
-                         rgba(255, 255, 255, 0.2) 40px
-                       ),
-                       linear-gradient(
-                         135deg,
-                         #667eea 0%,
-                         #764ba2 25%,
-                         #f093fb 50%,
-                         #4facfe 75%,
-                         #00f2fe 100%
-                       )
-                     `,
-                  animation: "shimmer 3s linear infinite",
-                }}
-              />
-            )}
-
-            {/* Card Set Number */}
-            <div className="absolute bottom-4 left-4 right-4 text-center">
-              <div className="bg-black/50 backdrop-blur-sm rounded-lg px-4 py-2 text-white">
-                <div className="text-xs opacity-70">Set Number</div>
-                <div className="text-lg font-bold">
-                  {pokemonCard?.number || "-"}
-                </div>
-              </div>
-            </div>
+          <div className={`aspect-2/3  relative overflow-hidden`}>
+            <Image
+              src={
+                pokemonCard?.images?.large ||
+                pokemonCard?.images?.small ||
+                "/placeholder.png"
+              }
+              alt={pokemonCard?.name || "Pokemon Card"}
+              fill
+              sizes="(max-width: 768px) 100vw, 50vw"
+              className="object-contain"
+            />
           </div>
 
           {/* Right: Card Details */}
@@ -136,6 +106,13 @@ export function CardDetailModal({
                       </span>
                     </div>
 
+                    <div className="flex items-center justify-between py-2 border-b border-border">
+                      <span className="text-muted-foreground">Set Number</span>
+                      <span className="font-medium">
+                        {pokemonCard?.number || "-"}
+                      </span>
+                    </div>
+
                     {pokemonCard?.types?.[0] && (
                       <div className="flex items-center justify-between py-2 border-b border-border">
                         <span className="text-muted-foreground">Type</span>
@@ -144,11 +121,6 @@ export function CardDetailModal({
                         </span>
                       </div>
                     )}
-
-                    <div className="flex items-center justify-between py-2 border-b border-border">
-                      <span className="text-muted-foreground">Condition</span>
-                      <span className="font-medium">{card.condition}</span>
-                    </div>
 
                     <div className="flex items-center justify-between py-2 border-b border-border">
                       <span className="text-muted-foreground">Quantity</span>
@@ -160,26 +132,28 @@ export function CardDetailModal({
                 </div>
 
                 {/* Actions */}
-                <div className="flex gap-3 mt-6">
-                  <button
-                    onClick={() => setIsEditing(true)}
-                    className="flex-1 px-4 py-3 bg-accent text-accent-foreground rounded-lg
-                             flex items-center justify-center gap-2 hover:scale-105
-                             transition-transform duration-200"
-                  >
-                    <Edit2 className="w-4 h-4" />
-                    Edit
-                  </button>
-                  <button
-                    onClick={onDelete}
-                    className="flex-1 px-4 py-3 bg-destructive text-destructive-foreground rounded-lg
-                             flex items-center justify-center gap-2 hover:scale-105
-                             transition-transform duration-200"
-                  >
-                    <Trash2 className="w-4 h-4" />
-                    Delete
-                  </button>
-                </div>
+                {isLoggedIn && (
+                  <div className="flex gap-3 mt-6">
+                    <button
+                      onClick={() => setIsEditing(true)}
+                      className="flex-1 px-4 py-3 bg-accent text-accent-foreground rounded-lg
+                               flex items-center justify-center gap-2 hover:scale-105
+                               transition-transform duration-200"
+                    >
+                      <Edit2 className="w-4 h-4" />
+                      Edit
+                    </button>
+                    <button
+                      onClick={() => setShowDeleteConfirm(true)}
+                      className="flex-1 px-4 py-3 bg-destructive text-destructive-foreground rounded-lg
+                               flex items-center justify-center gap-2 hover:scale-105
+                               transition-transform duration-200"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                      Delete
+                    </button>
+                  </div>
+                )}
               </>
             ) : (
               <>
@@ -278,6 +252,45 @@ export function CardDetailModal({
           </div>
         </div>
       </div>
+
+      {showDeleteConfirm && (
+        <div
+          className="fixed inset-0 z-60 flex items-center justify-center p-4"
+          onClick={(e) => {
+            e.stopPropagation();
+            setShowDeleteConfirm(false);
+          }}
+        >
+          <div className="absolute inset-0 bg-black/60" />
+          <div
+            className="relative w-full max-w-sm rounded-xl border border-border bg-card p-5 shadow-2xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h3 className="text-lg font-semibold">Delete this card?</h3>
+            <p className="mt-2 text-sm text-muted-foreground">
+              This will remove {pokemonCard?.name ?? "this card"} from your
+              collection.
+            </p>
+            <div className="mt-5 flex justify-end gap-2">
+              <button
+                onClick={() => setShowDeleteConfirm(false)}
+                className="rounded-lg border border-border px-4 py-2 text-sm hover:bg-muted"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => {
+                  setShowDeleteConfirm(false);
+                  onDelete();
+                }}
+                className="rounded-lg bg-destructive px-4 py-2 text-sm text-destructive-foreground hover:opacity-90"
+              >
+                Delete
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       <style>{`
         @keyframes modalZoomIn {

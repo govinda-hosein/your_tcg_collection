@@ -13,6 +13,11 @@ interface CreateOwnedCardBody {
   quantity?: number;
 }
 
+interface UpdateOwnedCardBody {
+  cardId?: string;
+  quantity?: number;
+}
+
 function toOwnedCardViewModel(
   ownedCard: PopulatedOwnedCard,
 ): OwnedCardViewModel {
@@ -112,6 +117,60 @@ export async function POST(request: NextRequest) {
     console.error(error);
     return NextResponse.json(
       { error: "An error occurred while creating the owned card" },
+      { status: 500 },
+    );
+  }
+}
+
+export async function PATCH(request: NextRequest) {
+  try {
+    await connectDB();
+
+    const body = (await request.json()) as UpdateOwnedCardBody;
+    const cardId = body.cardId?.trim();
+    const quantity = body.quantity;
+
+    if (!cardId) {
+      return NextResponse.json(
+        { error: "cardId is required" },
+        { status: 400 },
+      );
+    }
+
+    if (!Number.isInteger(quantity) || quantity === undefined || quantity < 1) {
+      return NextResponse.json(
+        { error: "quantity must be an integer greater than 0" },
+        { status: 400 },
+      );
+    }
+
+    const updated = await OwnedCard.findOneAndUpdate(
+      { cardId },
+      { $set: { quantity } },
+      { returnDocument: "after" },
+    );
+
+    if (!updated) {
+      return NextResponse.json(
+        { error: "Owned card not found" },
+        { status: 404 },
+      );
+    }
+
+    const updatedOwnedCard = await findOwnedCardViewModel(cardId);
+
+    if (!updatedOwnedCard) {
+      return NextResponse.json(
+        { error: "An error occurred while updating the owned card" },
+        { status: 500 },
+      );
+    }
+
+    return NextResponse.json(updatedOwnedCard, { status: 200 });
+  } catch (error) {
+    console.error(error);
+    return NextResponse.json(
+      { error: "An error occurred while updating the owned card" },
       { status: 500 },
     );
   }

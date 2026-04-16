@@ -93,6 +93,7 @@ export function CardGrid({
             onDelete(selectedCard.cardId);
             setSelectedCard(null);
           }}
+          isLoggedIn={isLoggedIn}
         />
       )}
     </>
