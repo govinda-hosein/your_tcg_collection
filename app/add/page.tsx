@@ -19,6 +19,7 @@ export default function AddCardPage() {
     null,
   );
   const [isImageModalOpen, setIsImageModalOpen] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
   const [quantity, setQuantity] = useState(1);
 
   const handleSearch = async (query: string) => {
@@ -55,18 +56,39 @@ export default function AddCardPage() {
     setSearchQuery("");
   };
 
-  const handleAddToCollection = () => {
+  const handleAddToCollection = async () => {
     if (!selectedCard) return;
 
-    // TODO: Wire this to a persisted add-card API endpoint.
-    console.info("Adding card", {
-      card: selectedCard,
-      quantity,
-    });
+    setIsSaving(true);
 
-    setSelectedCard(null);
-    setQuantity(1);
-    router.push("/");
+    try {
+      const response = await fetch("/api/owned-cards", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          cardId: selectedCard.id,
+          quantity,
+        }),
+      });
+
+      if (!response.ok) {
+        console.error(
+          "Failed to add card to collection",
+          await response.json(),
+        );
+        return;
+      }
+
+      setSelectedCard(null);
+      setQuantity(1);
+      router.push("/");
+    } catch (error) {
+      console.error("Failed to add card to collection", error);
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   const closeImageModal = () => {
@@ -264,12 +286,14 @@ export default function AddCardPage() {
                   <button
                     type="button"
                     onClick={handleAddToCollection}
+                    disabled={isSaving}
                     className="flex-1 px-6 py-4 bg-primary text-primary-foreground rounded-lg
-                             hover:scale-105 transition-transform duration-200 shadow-lg
+                             hover:scale-105 disabled:hover:scale-100 disabled:opacity-60
+                             transition-transform duration-200 shadow-lg
                              text-lg"
                     style={{ fontFamily: "var(--font-display)" }}
                   >
-                    ADD TO COLLECTION
+                    {isSaving ? "ADDING..." : "ADD TO COLLECTION"}
                   </button>
                 </div>
               </div>
