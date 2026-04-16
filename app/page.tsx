@@ -117,16 +117,16 @@ export default function Home() {
           <SearchBar value={searchQuery} onChange={setSearchQuery} />
 
           {isLoggedIn ? (
-            <button
-              onClick={() => setIsAddModalOpen(true)}
+            <a
               className="px-6 py-3 bg-primary text-primary-foreground rounded-lg
                      flex items-center gap-2 shadow-lg hover:scale-105
                      transition-transform duration-200"
               style={{ fontFamily: "var(--font-display)" }}
+              href="/add"
             >
               <Plus className="w-5 h-5" />
               ADD CARD
-            </button>
+            </a>
           ) : null}
         </div>
 

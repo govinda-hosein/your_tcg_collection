@@ -3,7 +3,6 @@ import type { OwnedCardViewModel } from "@/database/ownedCard.model";
 import connectDB from "@/lib/mongodb";
 import { NextResponse } from "next/server";
 
-type OwnedCardRarity = NonNullable<OwnedCardViewModel["card"]>["rarity"];
 type PopulatedOwnedCard = OwnedCardViewModel & {
   card: NonNullable<OwnedCardViewModel["card"]>;
 };
