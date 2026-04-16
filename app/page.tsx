@@ -6,8 +6,8 @@ import { CardGrid } from "@/components/CardGrid";
 import { CollectionStats } from "@/components/CollectionStats";
 import { SearchBar } from "@/components/SearchBar";
 import type { OwnedCardViewModel } from "@/database/ownedCard.model";
-import { Plus } from "lucide-react";
-import { getSession } from "next-auth/react";
+import { LogOut, Plus } from "lucide-react";
+import { getSession, signOut } from "next-auth/react";
 
 export default function Home() {
   const title = process.env.NEXT_PUBLIC_SITE_TITLE || "Your TCG Collection";
@@ -107,18 +107,32 @@ export default function Home() {
 
       <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Header */}
-        <div className="mb-8">
-          <h1
-            className="text-5xl mb-2 tracking-tight"
-            style={{ fontFamily: "var(--font-display)" }}
-          >
-            <span className="text-primary">{titleStart}</span>
-            {titleEnd ? " " : null}
-            <span className="text-accent">{titleEnd}</span>
-          </h1>
-          <p className="text-muted-foreground">
-            {process.env.NEXT_PUBLIC_SITE_DESCRIPTION}
-          </p>
+        <div className="mb-8 flex items-start justify-between">
+          <div>
+            <h1
+              className="text-5xl mb-2 tracking-tight"
+              style={{ fontFamily: "var(--font-display)" }}
+            >
+              <span className="text-primary">{titleStart}</span>
+              {titleEnd ? " " : null}
+              <span className="text-accent">{titleEnd}</span>
+            </h1>
+            <p className="text-muted-foreground">
+              {process.env.NEXT_PUBLIC_SITE_DESCRIPTION}
+            </p>
+          </div>
+
+          {isLoggedIn ? (
+            <button
+              onClick={() => signOut()}
+              className="flex items-center gap-2 px-4 py-2 text-sm text-muted-foreground
+                         hover:text-foreground border border-border rounded-lg
+                         hover:bg-muted transition-colors duration-200"
+            >
+              <LogOut className="w-4 h-4" />
+              Log out
+            </button>
+          ) : null}
         </div>
 
         {/* Collection Stats */}
