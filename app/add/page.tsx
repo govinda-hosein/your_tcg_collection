@@ -3,21 +3,18 @@
 import { ArrowLeft, Loader2, Search } from "lucide-react";
 
 import { CardSearchResult } from "@/components/CardSearchResult";
-import {
-  mockCardSearch,
-  type MockCardSearchResult,
-} from "@/lib/mockCardSearch";
+import type { PokemonCardViewModel } from "@/database";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
 export default function AddCardPage() {
   const router = useRouter();
   const [searchQuery, setSearchQuery] = useState("");
-  const [searchResults, setSearchResults] = useState<MockCardSearchResult[]>(
+  const [searchResults, setSearchResults] = useState<PokemonCardViewModel[]>(
     [],
   );
   const [isSearching, setIsSearching] = useState(false);
-  const [selectedCard, setSelectedCard] = useState<MockCardSearchResult | null>(
+  const [selectedCard, setSelectedCard] = useState<PokemonCardViewModel | null>(
     null,
   );
   const [quantity, setQuantity] = useState(1);
@@ -30,15 +27,27 @@ export default function AddCardPage() {
     }
 
     setIsSearching(true);
-    // Simulate API delay
-    setTimeout(() => {
-      const results = mockCardSearch(query);
-      setSearchResults(results);
+    try {
+      const response = await fetch(
+        `/api/pokemon-cards?name=${encodeURIComponent(query)}&limit=25`,
+      );
+
+      if (!response.ok) {
+        setSearchResults([]);
+        return;
+      }
+
+      const cards = (await response.json()) as PokemonCardViewModel[];
+      console.log(cards);
+      setSearchResults(cards);
+    } catch {
+      setSearchResults([]);
+    } finally {
       setIsSearching(false);
-    }, 500);
+    }
   };
 
-  const handleSelectCard = (card: MockCardSearchResult) => {
+  const handleSelectCard = (card: PokemonCardViewModel) => {
     setSelectedCard(card);
     setSearchResults([]);
     setSearchQuery("");
@@ -130,7 +139,7 @@ export default function AddCardPage() {
               <div className="mt-4 border-2 border-border rounded-lg overflow-hidden bg-input-background max-h-96 overflow-y-auto">
                 {searchResults.map((card, index) => (
                   <CardSearchResult
-                    key={`${card.name}-${card.set}-${index}`}
+                    key={`${card.name}-${card.set?.name ?? "Unknown Set"}-${index}`}
                     card={card}
                     onClick={() => handleSelectCard(card)}
                   />
@@ -175,19 +184,20 @@ export default function AddCardPage() {
                       {selectedCard.name}
                     </h3>
                     <div className="text-muted-foreground">
-                      {selectedCard.set} • {selectedCard.number}
+                      {selectedCard.set?.name ?? "Unknown Set"} •{" "}
+                      {selectedCard.number}
                     </div>
                     <div className="mt-2 inline-block px-3 py-1 rounded-full text-sm bg-linear-to-r from-purple-400 to-pink-400 text-white font-bold">
                       {selectedCard.rarity}
                     </div>
                   </div>
-                  {selectedCard.type && (
+                  {selectedCard.types && selectedCard.types.length > 0 && (
                     <div className="text-5xl">
-                      {selectedCard.type === "Fire" && "🔥"}
-                      {selectedCard.type === "Water" && "💧"}
-                      {selectedCard.type === "Electric" && "⚡"}
-                      {selectedCard.type === "Grass" && "🌿"}
-                      {selectedCard.type === "Psychic" && "🔮"}
+                      {selectedCard.types[0] === "Fire" && "🔥"}
+                      {selectedCard.types[0] === "Water" && "💧"}
+                      {selectedCard.types[0] === "Electric" && "⚡"}
+                      {selectedCard.types[0] === "Grass" && "🌿"}
+                      {selectedCard.types[0] === "Psychic" && "🔮"}
                     </div>
                   )}
                 </div>

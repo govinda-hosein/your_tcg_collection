@@ -1,28 +1,16 @@
+import type { PokemonCardViewModel } from "@/database";
+import { RARITY_COLORS } from "@/lib/constants";
 import { Sparkles } from "lucide-react";
+import Image from "next/image";
 
 interface CardSearchResultProps {
-  card: {
-    name: string;
-    set: string;
-    number: string;
-    rarity: string;
-    type?: string;
-  };
+  card: PokemonCardViewModel;
   onClick: () => void;
 }
 
-const rarityColors: Record<string, string> = {
-  Common: "from-gray-400 to-gray-300",
-  Uncommon: "from-green-400 to-green-300",
-  Rare: "from-blue-400 to-blue-300",
-  "Holo Rare": "from-purple-400 to-pink-400",
-  "Ultra Rare": "from-yellow-400 to-orange-400",
-  "Secret Rare": "from-red-500 to-pink-500",
-};
-
 export function CardSearchResult({ card, onClick }: CardSearchResultProps) {
   const rarityGradient =
-    rarityColors[card.rarity] || "from-gray-300 to-gray-200";
+    RARITY_COLORS[card.rarity] || "from-gray-300 to-gray-200";
   const isHolo =
     card.rarity.includes("Holo") ||
     card.rarity.includes("Ultra") ||
@@ -38,20 +26,26 @@ export function CardSearchResult({ card, onClick }: CardSearchResultProps) {
       {/* Card Icon/Preview */}
       <div
         className={`w-16 h-20 rounded-lg bg-linear-to-br ${rarityGradient} shrink-0
-                    flex items-center justify-center text-2xl shadow-md
+                    overflow-hidden shadow-md
                     group-hover:scale-105 transition-transform duration-200 relative`}
       >
+        <Image
+          src={card.images.small}
+          alt={card.name}
+          fill
+          sizes="64px"
+          className="object-cover"
+        />
         {isHolo && (
           <Sparkles className="absolute top-1 right-1 w-3 h-3 text-yellow-300" />
         )}
-        <span className="opacity-60">⚡</span>
       </div>
 
       {/* Card Info */}
       <div className="flex-1 min-w-0">
         <h3 className="font-bold text-lg truncate">{card.name}</h3>
         <div className="text-sm text-muted-foreground">
-          {card.set} • {card.number}
+          {card.set?.name ?? "Unknown Set"} • {card.number}
         </div>
         <div
           className={`mt-1 inline-block px-2 py-0.5 rounded-full text-xs
@@ -62,18 +56,18 @@ export function CardSearchResult({ card, onClick }: CardSearchResultProps) {
       </div>
 
       {/* Type Badge */}
-      {card.type && (
+      {card.types && card.types.length > 0 && (
         <div className="text-2xl shrink-0">
-          {card.type === "Fire" && "🔥"}
-          {card.type === "Water" && "💧"}
-          {card.type === "Electric" && "⚡"}
-          {card.type === "Grass" && "🌿"}
-          {card.type === "Psychic" && "🔮"}
-          {card.type === "Fighting" && "👊"}
-          {card.type === "Dark" && "🌙"}
-          {card.type === "Steel" && "⚙️"}
-          {card.type === "Dragon" && "🐉"}
-          {card.type === "Fairy" && "✨"}
+          {card.types[0] === "Fire" && "🔥"}
+          {card.types[0] === "Water" && "💧"}
+          {card.types[0] === "Electric" && "⚡"}
+          {card.types[0] === "Grass" && "🌿"}
+          {card.types[0] === "Psychic" && "🔮"}
+          {card.types[0] === "Fighting" && "👊"}
+          {card.types[0] === "Dark" && "🌙"}
+          {card.types[0] === "Steel" && "⚙️"}
+          {card.types[0] === "Dragon" && "🐉"}
+          {card.types[0] === "Fairy" && "✨"}
         </div>
       )}
     </button>

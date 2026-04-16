@@ -16,5 +16,8 @@ export { default as Set } from "./set.model";
 
 // Export types for TypeScript consumers
 export type { OwnedCardDocument } from "./ownedCard.model";
-export type { PokemonCardDocument } from "./pokemonCard.model";
+export type {
+  PokemonCardDocument,
+  PokemonCardViewModel,
+} from "./pokemonCard.model";
 export type { SetDocument } from "./set.model";

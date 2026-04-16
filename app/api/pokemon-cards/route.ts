@@ -1,6 +1,7 @@
-import { PokemonCard } from "@/database";
-import connectDB from "@/lib/mongodb";
 import { NextRequest, NextResponse } from "next/server";
+
+import { PokemonCard, Set } from "@/database";
+import connectDB from "@/lib/mongodb";
 
 function escapeRegex(value: string): string {
   return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
@@ -28,11 +29,50 @@ export async function GET(request: NextRequest) {
           }
         : {};
 
-    const cards = await PokemonCard.find(query)
-      .sort({ name: 1 })
-      .limit(limit)
-      .select("id name number rarity types images setId")
-      .lean();
+    const cards = await PokemonCard.aggregate([
+      {
+        $match: query,
+      },
+      {
+        $lookup: {
+          from: Set.collection.name,
+          localField: "setId",
+          foreignField: "id",
+          as: "set",
+        },
+      },
+      {
+        $unwind: {
+          path: "$set",
+          preserveNullAndEmptyArrays: true,
+        },
+      },
+      {
+        $sort: {
+          "set.releaseDate": -1,
+          name: 1,
+          number: 1,
+        },
+      },
+      {
+        $limit: limit,
+      },
+      {
+        $project: {
+          _id: 0,
+          id: 1,
+          name: 1,
+          number: 1,
+          regulationMark: 1,
+          rarity: 1,
+          types: 1,
+          images: 1,
+          set: {
+            name: "$set.name",
+          },
+        },
+      },
+    ]);
 
     return NextResponse.json(cards, { status: 200 });
   } catch (error) {

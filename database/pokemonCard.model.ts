@@ -1,4 +1,5 @@
 import { InferSchemaType, Model, Schema, model, models } from "mongoose";
+import type { SetDocument } from "./set.model";
 
 const imagesSchema = new Schema(
   {
@@ -44,6 +45,12 @@ pokemonCardSchema.virtual("set", {
 });
 
 export type PokemonCardDocument = InferSchemaType<typeof pokemonCardSchema>;
+export type PokemonCardViewModel = Pick<
+  PokemonCardDocument,
+  "id" | "name" | "number" | "regulationMark" | "rarity" | "types" | "images"
+> & {
+  set?: Pick<SetDocument, "name">;
+};
 export type PokemonCardModelType = Model<PokemonCardDocument>;
 
 const PokemonCardModel =
