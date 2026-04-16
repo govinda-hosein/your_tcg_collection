@@ -8,7 +8,7 @@ import { useState } from "react";
 interface CardDetailModalProps {
   card: OwnedCardViewModel;
   onClose: () => void;
-  onUpdate: (updates: Partial<OwnedCardViewModel>) => void;
+  onUpdate: (updates: Partial<OwnedCardViewModel>) => Promise<void> | void;
   onDelete: () => void;
   isLoggedIn: boolean;
 }
@@ -21,13 +21,20 @@ export function CardDetailModal({
   isLoggedIn,
 }: CardDetailModalProps) {
   const [isEditing, setIsEditing] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
   const [editData, setEditData] = useState(card);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const pokemonCard = card.card;
 
-  const handleSave = () => {
-    onUpdate(editData);
-    setIsEditing(false);
+  const handleSave = async () => {
+    setIsSaving(true);
+    try {
+      await onUpdate(editData);
+      setIsEditing(false);
+      onClose();
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   const rarityGradient =
@@ -188,20 +195,31 @@ export function CardDetailModal({
                       setEditData(card);
                       setIsEditing(false);
                     }}
+                    disabled={isSaving}
                     className="flex-1 px-4 py-3 border-2 border-border rounded-lg
-                             hover:bg-muted transition-colors duration-200"
+                             hover:bg-muted transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     Cancel
                   </button>
                   <button
                     onClick={handleSave}
+                    disabled={isSaving}
                     className="flex-1 px-4 py-3 bg-primary text-primary-foreground rounded-lg
                              flex items-center justify-center gap-2 hover:scale-105
-                             transition-transform duration-200"
+                             transition-transform duration-200 disabled:opacity-70 disabled:cursor-not-allowed"
                     style={{ fontFamily: "var(--font-display)" }}
                   >
-                    <Save className="w-4 h-4" />
-                    SAVE
+                    {isSaving ? (
+                      <>
+                        <span className="h-4 w-4 animate-spin rounded-full border-2 border-primary-foreground/40 border-t-primary-foreground" />
+                        SAVING...
+                      </>
+                    ) : (
+                      <>
+                        <Save className="w-4 h-4" />
+                        SAVE
+                      </>
+                    )}
                   </button>
                 </div>
               </>

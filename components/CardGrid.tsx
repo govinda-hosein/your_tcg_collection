@@ -6,7 +6,10 @@ import { CardItem } from "./CardItem";
 interface CardGridProps {
   cards: OwnedCardViewModel[];
   onDelete: (id: string) => void;
-  onUpdate: (id: string, updates: Partial<OwnedCardViewModel>) => void;
+  onUpdate: (
+    id: string,
+    updates: Partial<OwnedCardViewModel>,
+  ) => Promise<void> | void;
   isLoggedIn: boolean;
 }
 
@@ -85,8 +88,8 @@ export function CardGrid({
         <CardDetailModal
           card={selectedCard}
           onClose={() => setSelectedCard(null)}
-          onUpdate={(updates) => {
-            onUpdate(selectedCard.cardId, updates);
+          onUpdate={async (updates) => {
+            await onUpdate(selectedCard.cardId, updates);
             setSelectedCard({ ...selectedCard, ...updates });
           }}
           onDelete={() => {

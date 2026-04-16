@@ -83,15 +83,41 @@ export default function Home() {
     }
   };
 
-  const handleUpdateCard = (
+  const handleUpdateCard = async (
     id: string,
     updates: Partial<OwnedCardViewModel>,
   ) => {
-    setCards(
-      cards.map((card) =>
-        card.cardId === id ? { ...card, ...updates } : card,
-      ),
-    );
+    const currentCard = cards.find((card) => card.cardId === id);
+    const nextQuantity = updates.quantity ?? currentCard?.quantity;
+
+    if (!Number.isInteger(nextQuantity) || (nextQuantity ?? 0) < 1) {
+      console.error("Quantity must be an integer greater than 0");
+      return;
+    }
+
+    try {
+      const response = await fetch("/api/admin/owned-cards", {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          cardId: id,
+          quantity: nextQuantity,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to update card quantity");
+      }
+
+      const updatedCard = (await response.json()) as OwnedCardViewModel;
+      setCards((prevCards) =>
+        prevCards.map((card) => (card.cardId === id ? updatedCard : card)),
+      );
+    } catch (error) {
+      console.error("Error updating card quantity:", error);
+    }
   };
 
   return (
