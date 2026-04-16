@@ -1,9 +1,9 @@
 import { OwnedCard, PokemonCard } from "@/database";
-import type { OwnedCardViewModel } from "@/database/ownedCard.model";
-import connectDB from "@/lib/mongodb";
 import { NextRequest, NextResponse } from "next/server";
 
-type OwnedCardRarity = NonNullable<OwnedCardViewModel["card"]>["rarity"];
+import type { OwnedCardViewModel } from "@/database/ownedCard.model";
+import connectDB from "@/lib/mongodb";
+
 type PopulatedOwnedCard = OwnedCardViewModel & {
   card: NonNullable<OwnedCardViewModel["card"]>;
 };
@@ -11,21 +11,6 @@ type PopulatedOwnedCard = OwnedCardViewModel & {
 interface CreateOwnedCardBody {
   cardId?: string;
   quantity?: number;
-}
-
-const VALID_RARITIES: OwnedCardRarity[] = [
-  "Common",
-  "Uncommon",
-  "Rare",
-  "Holo Rare",
-  "Ultra Rare",
-  "Secret Rare",
-];
-
-function toRarity(value?: string): OwnedCardRarity {
-  return VALID_RARITIES.includes(value as OwnedCardRarity)
-    ? (value as OwnedCardRarity)
-    : "Rare";
 }
 
 function toOwnedCardViewModel(
@@ -38,7 +23,7 @@ function toOwnedCardViewModel(
       name: ownedCard.card.name,
       number: ownedCard.card.number,
       regulationMark: ownedCard.card.regulationMark,
-      rarity: toRarity(ownedCard.card.rarity),
+      rarity: ownedCard.card.rarity,
       types: ownedCard.card.types,
       images: ownedCard.card.images,
       set: {
