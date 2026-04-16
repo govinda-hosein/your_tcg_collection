@@ -62,7 +62,7 @@ export default function AddCardPage() {
     setIsSaving(true);
 
     try {
-      const response = await fetch("/api/owned-cards", {
+      const response = await fetch("/api/admin/add", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

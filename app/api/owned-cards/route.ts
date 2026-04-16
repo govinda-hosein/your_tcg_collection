@@ -1,17 +1,12 @@
-import { OwnedCard, PokemonCard } from "@/database";
+import { OwnedCard } from "@/database";
 import type { OwnedCardViewModel } from "@/database/ownedCard.model";
 import connectDB from "@/lib/mongodb";
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 
 type OwnedCardRarity = NonNullable<OwnedCardViewModel["card"]>["rarity"];
 type PopulatedOwnedCard = OwnedCardViewModel & {
   card: NonNullable<OwnedCardViewModel["card"]>;
 };
-
-interface CreateOwnedCardBody {
-  cardId?: string;
-  quantity?: number;
-}
 
 const VALID_RARITIES: OwnedCardRarity[] = [
   "Common",
@@ -50,26 +45,6 @@ function toOwnedCardViewModel(
   };
 }
 
-async function findOwnedCardViewModel(
-  cardId: string,
-): Promise<OwnedCardViewModel | null> {
-  const ownedCard = await OwnedCard.findOne({ cardId })
-    .populate({
-      path: "card",
-      populate: {
-        path: "set",
-        select: "name",
-      },
-    })
-    .lean<PopulatedOwnedCard | null>();
-
-  if (!ownedCard || !ownedCard.card) {
-    return null;
-  }
-
-  return toOwnedCardViewModel(ownedCard);
-}
-
 export async function GET() {
   try {
     await connectDB();
@@ -92,68 +67,6 @@ export async function GET() {
     console.error(e);
     return NextResponse.json(
       { error: "An error occurred while fetching owned cards" },
-      { status: 500 },
-    );
-  }
-}
-
-export async function POST(request: NextRequest) {
-  try {
-    await connectDB();
-
-    const body = (await request.json()) as CreateOwnedCardBody;
-    const cardId = body.cardId?.trim();
-    const quantity = body.quantity;
-
-    if (!cardId) {
-      return NextResponse.json(
-        { error: "cardId is required" },
-        { status: 400 },
-      );
-    }
-
-    if (!Number.isInteger(quantity) || quantity === undefined || quantity < 1) {
-      return NextResponse.json(
-        { error: "quantity must be an integer greater than 0" },
-        { status: 400 },
-      );
-    }
-
-    const existingPokemonCard = await PokemonCard.exists({ id: cardId });
-
-    if (!existingPokemonCard) {
-      return NextResponse.json(
-        { error: "Pokemon card not found" },
-        { status: 404 },
-      );
-    }
-
-    await OwnedCard.findOneAndUpdate(
-      { cardId },
-      {
-        $inc: { quantity },
-      },
-      {
-        upsert: true,
-        new: true,
-        setDefaultsOnInsert: true,
-      },
-    );
-
-    const createdOwnedCard = await findOwnedCardViewModel(cardId);
-
-    if (!createdOwnedCard) {
-      return NextResponse.json(
-        { error: "An error occurred while creating the owned card" },
-        { status: 500 },
-      );
-    }
-
-    return NextResponse.json(createdOwnedCard, { status: 201 });
-  } catch (error) {
-    console.error(error);
-    return NextResponse.json(
-      { error: "An error occurred while creating the owned card" },
       { status: 500 },
     );
   }
