@@ -66,8 +66,21 @@ export default function Home() {
     return matchesSearch;
   });
 
-  const handleDeleteCard = (id: string) => {
-    setCards(cards.filter((card) => card.cardId !== id));
+  const handleDeleteCard = async (id: string) => {
+    try {
+      const response = await fetch(
+        `/api/admin/owned-cards?cardId=${encodeURIComponent(id)}`,
+        { method: "DELETE" },
+      );
+
+      if (!response.ok) {
+        throw new Error("Failed to delete card");
+      }
+
+      setCards(cards.filter((card) => card.cardId !== id));
+    } catch (error) {
+      console.error("Error deleting card:", error);
+    }
   };
 
   const handleUpdateCard = (
