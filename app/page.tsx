@@ -17,7 +17,6 @@ export default function Home() {
   const titleEnd = words.slice(splitIndex).join(" ");
 
   const [cards, setCards] = useState<OwnedCardViewModel[]>([]);
-  const [, setIsAddModalOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [isLoggedIn, setIsLoggedIn] = useState(false);
 
