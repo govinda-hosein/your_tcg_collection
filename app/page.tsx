@@ -9,8 +9,13 @@ import { SearchBar } from "@/components/SearchBar";
 import type { OwnedCardViewModel } from "@/database/ownedCard.model";
 import { LogOut, Plus } from "lucide-react";
 import { getSession, signOut } from "next-auth/react";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 
 export default function Home() {
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+
   const title = process.env.NEXT_PUBLIC_SITE_TITLE || "Your TCG Collection";
   const words = title.trim().split(/\s+/);
   const splitIndex = Math.ceil(words.length / 2);
@@ -22,6 +27,8 @@ export default function Home() {
   const [selectedRarity, setSelectedRarity] = useState("");
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+
+  const rarityFromUrl = searchParams.get("rarity")?.trim() ?? "";
 
   const fetchCards = async (rarity?: string) => {
     const url = rarity
@@ -37,10 +44,14 @@ export default function Home() {
 
     const loadData = async () => {
       try {
-        const [session, data] = await Promise.all([getSession(), fetchCards()]);
+        const [session, data] = await Promise.all([
+          getSession(),
+          fetchCards(rarityFromUrl || undefined),
+        ]);
 
         if (!isMounted) return;
 
+        setSelectedRarity(rarityFromUrl);
         setIsLoggedIn(!!session?.user?.email);
         setCards(data);
       } catch (error) {
@@ -55,11 +66,24 @@ export default function Home() {
     return () => {
       isMounted = false;
     };
-  }, []);
+  }, [rarityFromUrl]);
 
   const handleRarityChange = async (rarity: string) => {
     setSelectedRarity(rarity);
     setSearchQuery("");
+
+    const nextParams = new URLSearchParams(searchParams.toString());
+    if (rarity) {
+      nextParams.set("rarity", rarity);
+    } else {
+      nextParams.delete("rarity");
+    }
+
+    const query = nextParams.toString();
+    router.replace(query ? `${pathname}?${query}` : pathname, {
+      scroll: false,
+    });
+
     try {
       const data = await fetchCards(rarity || undefined);
       setCards(data);
