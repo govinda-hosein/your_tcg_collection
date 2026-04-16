@@ -1,6 +1,6 @@
 import type { PokemonCardViewModel } from "@/database";
 import { RARITY_COLORS } from "@/lib/constants";
-import { Sparkles } from "lucide-react";
+import { isHoloRarity } from "@/lib/functions";
 import Image from "next/image";
 
 interface CardSearchResultProps {
@@ -11,17 +11,18 @@ interface CardSearchResultProps {
 export function CardSearchResult({ card, onClick }: CardSearchResultProps) {
   const rarityGradient =
     RARITY_COLORS[card.rarity] || "from-gray-300 to-gray-200";
-  const isHolo =
-    card.rarity.includes("Holo") ||
-    card.rarity.includes("Ultra") ||
-    card.rarity.includes("Secret");
+  const isHolo = isHoloRarity(card.rarity);
 
   return (
     <button
       onClick={onClick}
-      className="w-full px-4 py-3 flex items-center gap-4 hover:bg-muted/50
+      className={`w-full px-4 py-3 flex items-center gap-4
                transition-colors duration-200 border-b border-border last:border-b-0
-               text-left group"
+               text-left group ${
+                 isHolo
+                   ? "hover:bg-linear-to-r hover:from-purple-500/10 hover:via-pink-500/10 hover:to-blue-500/10"
+                   : "hover:bg-muted/50"
+               }`}
     >
       {/* Card Icon/Preview */}
       <div
@@ -36,9 +37,6 @@ export function CardSearchResult({ card, onClick }: CardSearchResultProps) {
           sizes="64px"
           className="object-cover"
         />
-        {isHolo && (
-          <Sparkles className="absolute top-1 right-1 w-3 h-3 text-yellow-300" />
-        )}
       </div>
 
       {/* Card Info */}
