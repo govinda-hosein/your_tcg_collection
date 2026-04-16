@@ -1,6 +1,7 @@
+import { readFile, readdir } from "node:fs/promises";
+
 import { loadEnvConfig } from "@next/env";
 import mongoose from "mongoose";
-import { readFile, readdir } from "node:fs/promises";
 import path from "node:path";
 
 loadEnvConfig(process.cwd());
@@ -10,7 +11,7 @@ type CardSeedInput = {
   setId: string;
   name: string;
   supertype: string;
-  hp: string;
+  hp?: string;
   types: string[];
   convertedRetreatCost: number;
   number: string;
@@ -42,10 +43,6 @@ function toCardSeedInput(
     typeof item.id !== "string" ||
     typeof item.name !== "string" ||
     typeof item.supertype !== "string" ||
-    typeof item.hp !== "string" ||
-    !Array.isArray(types) ||
-    types.length === 0 ||
-    typeof item.convertedRetreatCost !== "number" ||
     typeof item.number !== "string" ||
     typeof item.rarity !== "string" ||
     typeof item.regulationMark !== "string" ||
@@ -60,9 +57,14 @@ function toCardSeedInput(
     setId,
     name: item.name,
     supertype: item.supertype,
-    hp: item.hp,
-    types: types.filter((value): value is string => typeof value === "string"),
-    convertedRetreatCost: item.convertedRetreatCost,
+    hp: typeof item.hp === "string" ? item.hp : undefined,
+    types: Array.isArray(types)
+      ? types.filter((value): value is string => typeof value === "string")
+      : [],
+    convertedRetreatCost:
+      typeof item.convertedRetreatCost === "number"
+        ? item.convertedRetreatCost
+        : 0,
     number: item.number,
     rarity: item.rarity,
     regulationMark: item.regulationMark,

@@ -1,4 +1,5 @@
 import { InferSchemaType, Model, Schema, model, models } from "mongoose";
+
 import type { SetDocument } from "./set.model";
 
 const imagesSchema = new Schema(
@@ -14,17 +15,23 @@ const pokemonCardSchema = new Schema(
     id: { type: String, required: true, unique: true, index: true, trim: true },
     setId: { type: String, required: true, index: true, trim: true },
     name: { type: String, required: true, trim: true },
-    supertype: { type: String, required: true, trim: true },
-    hp: { type: String, required: true, trim: true },
+    supertype: { type: String, required: false, trim: true },
+    hp: { type: String, required: false, trim: true, default: null },
     types: {
       type: [{ type: String, trim: true }],
-      required: true,
+      required: false,
       validate: {
         validator: (value: string[]) => value.length > 0,
         message: "At least one Pokemon type is required.",
       },
+      default: null,
     },
-    convertedRetreatCost: { type: Number, required: true, min: 0 },
+    convertedRetreatCost: {
+      type: Number,
+      required: false,
+      min: 0,
+      default: null,
+    },
     number: { type: String, required: true, trim: true },
     rarity: { type: String, required: true, trim: true },
     regulationMark: { type: String, required: true, trim: true },

@@ -1,4 +1,5 @@
 export const RARITY_COLORS: Readonly<Record<string, string>> = {
+  "ACE Spec Rare": "",
   Common: "from-gray-400 to-gray-300",
   Uncommon: "from-green-400 to-green-300",
   Rare: "from-blue-400 to-blue-300",

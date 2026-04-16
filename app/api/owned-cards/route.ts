@@ -1,7 +1,7 @@
 import { OwnedCard } from "@/database";
 import type { OwnedCardViewModel } from "@/database/ownedCard.model";
 import connectDB from "@/lib/mongodb";
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 
 type PopulatedOwnedCard = OwnedCardViewModel & {
   card: NonNullable<OwnedCardViewModel["card"]>;
@@ -29,7 +29,9 @@ function toOwnedCardViewModel(
   };
 }
 
-export async function GET() {
+export async function GET(request: NextRequest) {
+  const rarity = request.nextUrl.searchParams.get("rarity")?.trim() || null;
+
   try {
     await connectDB();
     const ownedCards = await OwnedCard.find()
@@ -44,6 +46,11 @@ export async function GET() {
 
     const response: OwnedCardViewModel[] = ownedCards
       .filter((ownedCard) => ownedCard.card)
+      .filter((ownedCard) =>
+        rarity
+          ? ownedCard.card.rarity?.toLowerCase() === rarity.toLowerCase()
+          : true,
+      )
       .map((ownedCard) => toOwnedCardViewModel(ownedCard))
       .sort((a, b) => (a.card?.name ?? "").localeCompare(b.card?.name ?? ""));
 
