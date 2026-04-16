@@ -44,7 +44,8 @@ export async function GET() {
 
     const response: OwnedCardViewModel[] = ownedCards
       .filter((ownedCard) => ownedCard.card)
-      .map((ownedCard) => toOwnedCardViewModel(ownedCard));
+      .map((ownedCard) => toOwnedCardViewModel(ownedCard))
+      .sort((a, b) => (a.card?.name ?? "").localeCompare(b.card?.name ?? ""));
 
     return NextResponse.json(response, { status: 200 });
   } catch (e) {
