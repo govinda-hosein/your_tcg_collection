@@ -83,25 +83,15 @@ export function CardItem({ card, onClick, onDelete, index }: CardItemProps) {
         {/* Card Image Placeholder */}
         <div className={`aspect-2/3  relative overflow-hidden`}>
           {/* Placeholder Pokemon Silhouette */}
-          <div className="absolute inset-0 flex items-center justify-center">
+          <div className="absolute inset-0 flex items-center justify-center bg-black/5">
             <Image
               src={pokemonCard?.images?.small || "/placeholder.png"}
               alt={pokemonCard?.name || "Pokemon Card"}
               fill
               sizes="(max-width: 640px) 100vw, (max-width: 1280px) 33vw, 25vw"
-              className="object-cover"
+              className="object-contain"
             />
           </div>
-
-          {/* Quantity Badge */}
-          {card.quantity > 1 && (
-            <div
-              className="absolute bottom-2 right-2 bg-black/70 text-white
-                          px-2 py-1 rounded-full text-xs font-bold"
-            >
-              x{card.quantity}
-            </div>
-          )}
         </div>
 
         {/* Card Info */}
@@ -127,15 +117,22 @@ export function CardItem({ card, onClick, onDelete, index }: CardItemProps) {
             <span>{pokemonCard?.set?.name || "Unknown Set"}</span>
             <span>{pokemonCard?.number || "-"}</span>
           </div>
+          <div className="flex items-center justify-between text-xs text-muted-foreground mt-2">
+            <span>In Stock</span>
+            {/* Quantity Badge */}
+            <div
+              className=" bg-black/70 text-white
+                          px-2 py-1 rounded-full text-xs font-bold"
+            >
+              x{card.quantity}
+            </div>
+          </div>
           <div className="mt-2 flex items-center justify-between">
             <span
               className={`text-xs px-2 py-0.5 rounded-full bg-linear-to-r ${rarityGradient}
                            text-white font-medium`}
             >
               {pokemonCard?.rarity || "Rare"}
-            </span>
-            <span className="text-xs text-muted-foreground">
-              {card.condition}
             </span>
           </div>
         </div>

@@ -8,21 +8,6 @@ type PopulatedOwnedCard = OwnedCardViewModel & {
   card: NonNullable<OwnedCardViewModel["card"]>;
 };
 
-const VALID_RARITIES: OwnedCardRarity[] = [
-  "Common",
-  "Uncommon",
-  "Rare",
-  "Holo Rare",
-  "Ultra Rare",
-  "Secret Rare",
-];
-
-function toRarity(value?: string): OwnedCardRarity {
-  return VALID_RARITIES.includes(value as OwnedCardRarity)
-    ? (value as OwnedCardRarity)
-    : "Rare";
-}
-
 function toOwnedCardViewModel(
   ownedCard: PopulatedOwnedCard,
 ): OwnedCardViewModel {
@@ -33,7 +18,7 @@ function toOwnedCardViewModel(
       name: ownedCard.card.name,
       number: ownedCard.card.number,
       regulationMark: ownedCard.card.regulationMark,
-      rarity: toRarity(ownedCard.card.rarity),
+      rarity: ownedCard.card.rarity,
       types: ownedCard.card.types,
       images: ownedCard.card.images,
       set: {
