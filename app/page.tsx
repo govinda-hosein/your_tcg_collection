@@ -3,7 +3,7 @@
 import { LogOut, Plus } from "lucide-react";
 import { getSession, signOut } from "next-auth/react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 
 import { CardGrid } from "@/components/CardGrid";
 import { CollectionStats } from "@/components/CollectionStats";
@@ -13,7 +13,7 @@ import type { OwnedCardViewModel } from "@/database/ownedCard.model";
 import { withBasePath } from "@/lib/url";
 import Link from "next/link";
 
-export default function Home() {
+function HomeContent() {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -250,5 +250,13 @@ export default function Home() {
         />
       </div>
     </div>
+  );
+}
+
+export default function Home() {
+  return (
+    <Suspense fallback={null}>
+      <HomeContent />
+    </Suspense>
   );
 }

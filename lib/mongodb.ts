@@ -8,14 +8,18 @@ import mongoose from "mongoose";
  * hot-reloads and optimizes performance in serverless environments.
  */
 
-// MongoDB connection string from environment variables
-const MONGODB_URI = process.env.MONGODB_URI;
+// MongoDB connection string from environment variables.
+// It is resolved lazily inside connectDB so Next.js build-time imports do not fail.
+function getMongoUri(): string {
+  const uri = process.env.MONGODB_URI;
 
-// Validate that the MongoDB URI is defined
-if (!MONGODB_URI) {
-  throw new Error(
-    "Please define the MONGODB_URI environment variable inside .env.local",
-  );
+  if (!uri) {
+    throw new Error(
+      "Please define the MONGODB_URI environment variable inside .env.local",
+    );
+  }
+
+  return uri;
 }
 
 /**
@@ -68,6 +72,8 @@ async function connectDB(): Promise<typeof mongoose> {
 
   // If there's no existing promise, create a new connection
   if (!cached.promise) {
+    const mongoUri = getMongoUri();
+
     const options = {
       bufferCommands: false, // Disable Mongoose buffering
       maxPoolSize: 10, // Maximum number of connections in the pool
@@ -78,7 +84,7 @@ async function connectDB(): Promise<typeof mongoose> {
 
     // Create the connection promise
     cached.promise = mongoose
-      .connect(MONGODB_URI as string, options)
+      .connect(mongoUri, options)
       .then((mongooseInstance) => {
         console.log("✅ MongoDB connected successfully");
         return mongooseInstance;

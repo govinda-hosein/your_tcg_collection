@@ -2,12 +2,13 @@
 
 import { ArrowLeft, LogIn, LogOut, ShieldCheck } from "lucide-react";
 import { signIn, signOut, useSession } from "next-auth/react";
+import { Suspense } from "react";
 
 import { withBasePath } from "@/lib/url";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 
-function AdminLoginContent() {
+function AdminLoginContentInner() {
   const { data: session } = useSession();
   const searchParams = useSearchParams();
   const authError = searchParams.get("error");
@@ -93,6 +94,14 @@ function AdminLoginContent() {
         </div>
       </div>
     </main>
+  );
+}
+
+function AdminLoginContent() {
+  return (
+    <Suspense fallback={null}>
+      <AdminLoginContentInner />
+    </Suspense>
   );
 }
 
