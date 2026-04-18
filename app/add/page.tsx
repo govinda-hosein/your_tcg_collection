@@ -4,6 +4,7 @@ import { ArrowLeft, Loader2, Search, X, ZoomIn } from "lucide-react";
 
 import { CardSearchResult } from "@/components/CardSearchResult";
 import type { PokemonCardViewModel } from "@/database";
+import { withBasePath } from "@/lib/url";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
@@ -32,7 +33,7 @@ export default function AddCardPage() {
     setIsSearching(true);
     try {
       const response = await fetch(
-        `/api/pokemon-cards?name=${encodeURIComponent(query)}&limit=25`,
+        `${withBasePath("/api/pokemon-cards")}?name=${encodeURIComponent(query)}&limit=25`,
       );
 
       if (!response.ok) {
@@ -62,7 +63,7 @@ export default function AddCardPage() {
     setIsSaving(true);
 
     try {
-      const response = await fetch("/api/admin/owned-cards", {
+      const response = await fetch(withBasePath("/api/admin/owned-cards"), {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

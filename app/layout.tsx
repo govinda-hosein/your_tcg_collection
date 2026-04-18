@@ -3,6 +3,7 @@ import "./globals.css";
 import { Bowlby_One, Outfit } from "next/font/google";
 
 import type { Metadata } from "next";
+import { Providers } from "./providers";
 
 const outfit = Outfit({
   variable: "--font-outfit",
@@ -33,7 +34,9 @@ export default function RootLayout({
       lang="en"
       className={`${outfit.variable} ${bowlbyOne.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col">{children}</body>
+      <body className="min-h-full flex flex-col">
+        <Providers>{children}</Providers>
+      </body>
     </html>
   );
 }

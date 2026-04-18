@@ -1,5 +1,8 @@
 "use client";
 
+import { LogOut, Plus } from "lucide-react";
+import { getSession, signOut } from "next-auth/react";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 
 import { CardGrid } from "@/components/CardGrid";
@@ -7,9 +10,8 @@ import { CollectionStats } from "@/components/CollectionStats";
 import { RaritySelect } from "@/components/RaritySelect";
 import { SearchBar } from "@/components/SearchBar";
 import type { OwnedCardViewModel } from "@/database/ownedCard.model";
-import { LogOut, Plus } from "lucide-react";
-import { getSession, signOut } from "next-auth/react";
-import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { withBasePath } from "@/lib/url";
+import Link from "next/link";
 
 export default function Home() {
   const router = useRouter();
@@ -31,9 +33,10 @@ export default function Home() {
   const rarityFromUrl = searchParams.get("rarity")?.trim() ?? "";
 
   const fetchCards = async (rarity?: string) => {
+    const baseApiPath = withBasePath("/api/owned-cards");
     const url = rarity
-      ? `/api/owned-cards?rarity=${encodeURIComponent(rarity)}`
-      : "/api/owned-cards";
+      ? `${baseApiPath}?rarity=${encodeURIComponent(rarity)}`
+      : baseApiPath;
     const response = await fetch(url, { cache: "no-store" });
     if (!response.ok) throw new Error("Failed to fetch owned cards");
     return (await response.json()) as OwnedCardViewModel[];
@@ -103,7 +106,7 @@ export default function Home() {
   const handleDeleteCard = async (id: string) => {
     try {
       const response = await fetch(
-        `/api/admin/owned-cards?cardId=${encodeURIComponent(id)}`,
+        `${withBasePath("/api/admin/owned-cards")}?cardId=${encodeURIComponent(id)}`,
         { method: "DELETE" },
       );
 
@@ -130,7 +133,7 @@ export default function Home() {
     }
 
     try {
-      const response = await fetch("/api/admin/owned-cards", {
+      const response = await fetch(withBasePath("/api/admin/owned-cards"), {
         method: "PATCH",
         headers: {
           "Content-Type": "application/json",
@@ -225,7 +228,7 @@ export default function Home() {
           </div>
 
           {isLoggedIn ? (
-            <a
+            <Link
               className="px-6 py-3 bg-primary text-primary-foreground rounded-lg
                      flex items-center gap-2 shadow-lg hover:scale-105
                      transition-transform duration-200"
@@ -234,7 +237,7 @@ export default function Home() {
             >
               <Plus className="w-5 h-5" />
               ADD CARD
-            </a>
+            </Link>
           ) : null}
         </div>
 

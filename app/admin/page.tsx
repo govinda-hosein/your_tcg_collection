@@ -1,8 +1,9 @@
 "use client";
 
 import { ArrowLeft, LogIn, LogOut, ShieldCheck } from "lucide-react";
-import { SessionProvider, signIn, signOut, useSession } from "next-auth/react";
+import { signIn, signOut, useSession } from "next-auth/react";
 
+import { withBasePath } from "@/lib/url";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 
@@ -65,7 +66,7 @@ function AdminLoginContent() {
                 Welcome, {session.user?.name || session.user?.email || "Admin"}!
               </div>
               <button
-                onClick={() => signOut({ callbackUrl: "/admin" })}
+                onClick={() => signOut({ callbackUrl: withBasePath("/admin") })}
                 className="w-full px-5 py-3 bg-destructive text-destructive-foreground rounded-lg
                          flex items-center justify-center gap-2 shadow-lg hover:scale-[1.01]
                          transition-transform duration-200"
@@ -77,7 +78,9 @@ function AdminLoginContent() {
             </div>
           ) : (
             <button
-              onClick={() => signIn("google", { callbackUrl: "/admin" })}
+              onClick={() =>
+                signIn("google", { callbackUrl: withBasePath("/admin") })
+              }
               className="w-full px-5 py-3 bg-primary text-primary-foreground rounded-lg
                        flex items-center justify-center gap-2 shadow-lg hover:scale-[1.01]
                        transition-transform duration-200"
@@ -94,9 +97,5 @@ function AdminLoginContent() {
 }
 
 export default function AdminPage() {
-  return (
-    <SessionProvider>
-      <AdminLoginContent />
-    </SessionProvider>
-  );
+  return <AdminLoginContent />;
 }
