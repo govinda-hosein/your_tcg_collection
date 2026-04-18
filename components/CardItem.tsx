@@ -84,7 +84,7 @@ export function CardItem({ card, onClick, index }: CardItemProps) {
           {/* Placeholder Pokemon Silhouette */}
           <div className="absolute inset-0 flex items-center justify-center bg-black/5">
             <Image
-              src={pokemonCard?.images?.small || "/placeholder.png"}
+              src={pokemonCard?.images?.large || "/placeholder.png"}
               alt={pokemonCard?.name || "Pokemon Card"}
               fill
               sizes="(max-width: 640px) 100vw, (max-width: 1280px) 33vw, 25vw"
@@ -95,7 +95,7 @@ export function CardItem({ card, onClick, index }: CardItemProps) {
 
         {/* Card Info */}
         <div className="p-3 bg-white">
-          <div className="flex items-center justify-between text-xs text-muted-foreground mb-2">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between text-xs text-muted-foreground mb-2">
             <h3 className="font-bold text-sm mb-1 truncate">
               {pokemonCard?.name || "Unknown Card"}
             </h3>
