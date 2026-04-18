@@ -31,6 +31,7 @@ function HomeContent() {
   const [isLoading, setIsLoading] = useState(true);
 
   const rarityFromUrl = searchParams.get("rarity")?.trim() ?? "";
+  const searchFromUrl = searchParams.get("search")?.trim() ?? "";
 
   const fetchCards = async (rarity?: string) => {
     const baseApiPath = withBasePath("/api/owned-cards");
@@ -55,6 +56,7 @@ function HomeContent() {
         if (!isMounted) return;
 
         setSelectedRarity(rarityFromUrl);
+        setSearchQuery(searchFromUrl);
         setIsLoggedIn(!!session?.user?.email);
         setCards(data);
       } catch (error) {
@@ -69,7 +71,23 @@ function HomeContent() {
     return () => {
       isMounted = false;
     };
-  }, [rarityFromUrl]);
+  }, [rarityFromUrl, searchFromUrl]);
+
+  const handleSearchChange = (query: string) => {
+    setSearchQuery(query);
+
+    const nextParams = new URLSearchParams(searchParams.toString());
+    if (query.trim()) {
+      nextParams.set("search", query.trim());
+    } else {
+      nextParams.delete("search");
+    }
+
+    const nextQuery = nextParams.toString();
+    router.replace(nextQuery ? `${pathname}?${nextQuery}` : pathname, {
+      scroll: false,
+    });
+  };
 
   const handleRarityChange = async (rarity: string) => {
     setSelectedRarity(rarity);
@@ -81,6 +99,7 @@ function HomeContent() {
     } else {
       nextParams.delete("rarity");
     }
+    nextParams.delete("search");
 
     const query = nextParams.toString();
     router.replace(query ? `${pathname}?${query}` : pathname, {
@@ -220,7 +239,7 @@ function HomeContent() {
         {/* Controls */}
         <div className="mt-8 flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
           <div className="flex-1 flex flex-col sm:flex-row gap-3 items-start sm:items-center">
-            <SearchBar value={searchQuery} onChange={setSearchQuery} />
+            <SearchBar value={searchQuery} onChange={handleSearchChange} />
             <RaritySelect
               value={selectedRarity}
               onChange={handleRarityChange}
