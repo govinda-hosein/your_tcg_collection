@@ -1,101 +1,13 @@
 "use client";
 
+import { useBasket } from "@/hooks/useBasket";
 import { ArrowLeft, Minus, Plus, ShoppingBasket, Trash2 } from "lucide-react";
-import { useEffect, useMemo, useState } from "react";
 
 import Link from "next/link";
 
-type BasketItem = {
-  cardId: string;
-  cardName: string;
-  setName?: string;
-  rarity?: string;
-  quantity: number;
-};
-
-const BASKET_STORAGE_KEY = "tcg-basket-v1";
-
-function sanitizeItems(value: unknown): BasketItem[] {
-  if (!Array.isArray(value)) return [];
-  const result: BasketItem[] = [];
-
-  for (const raw of value) {
-    if (!raw || typeof raw !== "object") continue;
-
-    const item = raw as Partial<BasketItem>;
-    const cardId = typeof item.cardId === "string" ? item.cardId.trim() : "";
-    const cardName =
-      typeof item.cardName === "string" ? item.cardName.trim() : "";
-    const setName = typeof item.setName === "string" ? item.setName.trim() : "";
-    const rarity = typeof item.rarity === "string" ? item.rarity.trim() : "";
-    const quantity = Number.isFinite(item.quantity)
-      ? Math.max(1, Math.floor(Number(item.quantity)))
-      : 1;
-
-    if (!cardId || !cardName) continue;
-
-    result.push({
-      cardId,
-      cardName,
-      setName,
-      rarity,
-      quantity,
-    });
-  }
-
-  return result;
-}
-
 export default function BasketPage() {
-  const [items, setItems] = useState<BasketItem[]>([]);
-  const [isHydrated, setIsHydrated] = useState(false);
-
-  useEffect(() => {
-    try {
-      const raw = window.localStorage.getItem(BASKET_STORAGE_KEY);
-      if (!raw) {
-        setIsHydrated(true);
-        return;
-      }
-      const parsed = JSON.parse(raw);
-      setItems(sanitizeItems(parsed));
-    } catch {
-      setItems([]);
-    } finally {
-      setIsHydrated(true);
-    }
-  }, []);
-
-  useEffect(() => {
-    if (!isHydrated) return;
-    window.localStorage.setItem(BASKET_STORAGE_KEY, JSON.stringify(items));
-  }, [items, isHydrated]);
-
-  const totals = useMemo(() => {
-    const distinctCards = items.length;
-    const totalQuantity = items.reduce((sum, item) => sum + item.quantity, 0);
-    return { distinctCards, totalQuantity };
-  }, [items]);
-
-  const changeQuantity = (id: string, delta: number) => {
-    setItems((prev) =>
-      prev
-        .map((item) =>
-          item.cardId === id
-            ? { ...item, quantity: Math.max(1, item.quantity + delta) }
-            : item,
-        )
-        .filter((item) => item.quantity > 0),
-    );
-  };
-
-  const removeItem = (id: string) => {
-    setItems((prev) => prev.filter((item) => item.cardId !== id));
-  };
-
-  const clearBasket = () => {
-    setItems([]);
-  };
+  const { items, isHydrated, totals, changeQuantity, removeItem, clearBasket } =
+    useBasket();
 
   return (
     <div className="min-h-screen relative overflow-hidden">
