@@ -69,6 +69,8 @@ export function CardItem({ card, onClick, index, onBasketAdd }: CardItemProps) {
       {
         cardId: card.cardId,
         cardName: pokemonCard?.name || "Unknown Card",
+        cardImage:
+          pokemonCard?.images?.small || pokemonCard?.images?.large || "",
         setName: pokemonCard?.set?.name || "",
         rarity: pokemonCard?.rarity || "",
       },

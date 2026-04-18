@@ -3,6 +3,7 @@
 import { ArrowLeft, Minus, Plus, ShoppingBasket, Trash2 } from "lucide-react";
 
 import { useBasket } from "@/hooks/useBasket";
+import Image from "next/image";
 import Link from "next/link";
 
 export default function BasketPage() {
@@ -102,15 +103,33 @@ export default function BasketPage() {
                       className="rounded-xl border-2 border-border bg-input-background/40 p-4"
                     >
                       <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-                        <div className="min-w-0">
-                          <h3 className="font-semibold truncate">
-                            {item.cardName}
-                          </h3>
-                          <p className="text-sm text-muted-foreground truncate">
-                            ID: {item.cardId}
-                            {item.setName ? ` • ${item.setName}` : ""}
-                            {item.rarity ? ` • ${item.rarity}` : ""}
-                          </p>
+                        <div className="min-w-0 flex items-start gap-3">
+                          <div className="relative h-14 w-10 shrink-0 overflow-hidden rounded-md border border-border bg-card/60">
+                            {item.cardImage ? (
+                              <Image
+                                src={item.cardImage}
+                                alt={item.cardName}
+                                fill
+                                sizes="40px"
+                                className="object-cover"
+                              />
+                            ) : (
+                              <div className="flex h-full w-full items-center justify-center text-[10px] text-muted-foreground">
+                                No Img
+                              </div>
+                            )}
+                          </div>
+
+                          <div className="min-w-0">
+                            <h3 className="font-semibold truncate">
+                              {item.cardName}
+                            </h3>
+                            <p className="text-sm text-muted-foreground truncate">
+                              ID: {item.cardId}
+                              {item.setName ? ` • ${item.setName}` : ""}
+                              {item.rarity ? ` • ${item.rarity}` : ""}
+                            </p>
+                          </div>
                         </div>
 
                         <div className="flex items-center gap-2">

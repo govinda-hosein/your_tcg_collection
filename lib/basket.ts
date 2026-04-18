@@ -1,6 +1,7 @@
 export type BasketItem = {
   cardId: string;
   cardName: string;
+  cardImage?: string;
   setName?: string;
   rarity?: string;
   quantity: number;
@@ -24,6 +25,8 @@ export function sanitizeBasketItems(value: unknown): BasketItem[] {
     const cardId = typeof item.cardId === "string" ? item.cardId.trim() : "";
     const cardName =
       typeof item.cardName === "string" ? item.cardName.trim() : "";
+    const cardImage =
+      typeof item.cardImage === "string" ? item.cardImage.trim() : "";
     const setName = typeof item.setName === "string" ? item.setName.trim() : "";
     const rarity = typeof item.rarity === "string" ? item.rarity.trim() : "";
     const quantity = Number.isFinite(item.quantity)
@@ -35,6 +38,7 @@ export function sanitizeBasketItems(value: unknown): BasketItem[] {
     result.push({
       cardId,
       cardName,
+      cardImage,
       setName,
       rarity,
       quantity,
@@ -121,6 +125,7 @@ export function addBasketItem(
         ? {
             ...entry,
             cardName: item.cardName,
+            cardImage: item.cardImage,
             setName: item.setName,
             rarity: item.rarity,
             quantity: nextQuantity,
