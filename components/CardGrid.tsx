@@ -12,6 +12,11 @@ interface CardGridProps {
   ) => Promise<void> | void;
   isLoggedIn: boolean;
   totalQuantity: number;
+  onBasketAdd?: (event: {
+    cardName: string;
+    addedQuantity: number;
+    inBasketQuantity: number;
+  }) => void;
 }
 
 export function CardGrid({
@@ -20,6 +25,7 @@ export function CardGrid({
   onUpdate,
   isLoggedIn,
   totalQuantity,
+  onBasketAdd,
 }: CardGridProps) {
   const [selectedCard, setSelectedCard] = useState<OwnedCardViewModel | null>(
     null,
@@ -82,6 +88,7 @@ export function CardGrid({
                 onDelete={onDelete}
                 index={index}
                 isLoggedIn={isLoggedIn}
+                onBasketAdd={onBasketAdd}
               />
             ))}
           </div>

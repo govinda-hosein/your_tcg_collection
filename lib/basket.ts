@@ -94,3 +94,46 @@ export function removeBasketItem(
 export function clearBasketItems(): BasketItem[] {
   return [];
 }
+
+export function addBasketItem(
+  items: BasketItem[],
+  item: Omit<BasketItem, "quantity">,
+  quantityToAdd = 1,
+  maxQuantity?: number,
+): BasketItem[] {
+  const safeQuantityToAdd = Math.max(1, Math.floor(quantityToAdd));
+  const safeMax =
+    typeof maxQuantity === "number" && Number.isFinite(maxQuantity)
+      ? Math.max(1, Math.floor(maxQuantity))
+      : undefined;
+
+  const existing = items.find((entry) => entry.cardId === item.cardId);
+  const currentQuantity = existing?.quantity ?? 0;
+  const nextQuantityRaw = currentQuantity + safeQuantityToAdd;
+  const nextQuantity =
+    typeof safeMax === "number"
+      ? Math.min(nextQuantityRaw, safeMax)
+      : nextQuantityRaw;
+
+  if (existing) {
+    return items.map((entry) =>
+      entry.cardId === item.cardId
+        ? {
+            ...entry,
+            cardName: item.cardName,
+            setName: item.setName,
+            rarity: item.rarity,
+            quantity: nextQuantity,
+          }
+        : entry,
+    );
+  }
+
+  return [
+    ...items,
+    {
+      ...item,
+      quantity: nextQuantity,
+    },
+  ];
+}
