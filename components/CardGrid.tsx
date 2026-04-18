@@ -11,6 +11,7 @@ interface CardGridProps {
     updates: Partial<OwnedCardViewModel>,
   ) => Promise<void> | void;
   isLoggedIn: boolean;
+  totalQuantity: number;
 }
 
 export function CardGrid({
@@ -18,6 +19,7 @@ export function CardGrid({
   onDelete,
   onUpdate,
   isLoggedIn,
+  totalQuantity,
 }: CardGridProps) {
   const [selectedCard, setSelectedCard] = useState<OwnedCardViewModel | null>(
     null,
@@ -46,8 +48,11 @@ export function CardGrid({
         {/* Binder Page Header */}
         <div className="mb-6 flex items-center gap-3">
           <div className="flex-1 h-0.5 bg-linear-to-r from-transparent via-border to-transparent" />
-          <span className="text-sm uppercase tracking-widest text-muted-foreground px-4">
+          <span className="inline-flex items-center gap-2 text-sm uppercase tracking-widest text-muted-foreground px-4">
             My Collection
+            <span className="rounded-full border border-primary/30 bg-primary/10 px-2 py-0.5 text-[10px] leading-none text-primary">
+              {totalQuantity} total
+            </span>
           </span>
           <div className="flex-1 h-0.5 bg-linear-to-r from-transparent via-border to-transparent" />
         </div>

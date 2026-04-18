@@ -1,6 +1,6 @@
 "use client";
 
-import { LogOut, Package, Plus, ShoppingBasket } from "lucide-react";
+import { LogOut, Plus, ShoppingBasket } from "lucide-react";
 import { getSession, signOut } from "next-auth/react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useEffect, useState } from "react";
@@ -232,22 +232,6 @@ function HomeContent() {
             <p className="text-muted-foreground">
               {process.env.NEXT_PUBLIC_SITE_DESCRIPTION}
             </p>
-            <div className="mt-4 inline-flex items-center gap-3 rounded-xl border-2 border-primary/20 bg-primary/10 px-4 py-3 shadow-sm">
-              <div className="rounded-lg bg-primary/15 p-2 text-primary">
-                <Package className="h-5 w-5" />
-              </div>
-              <div>
-                <p className="text-[11px] uppercase tracking-[0.2em] text-primary/80">
-                  Total Owned Cards
-                </p>
-                <p
-                  className="text-2xl leading-none text-foreground"
-                  style={{ fontFamily: "var(--font-display)" }}
-                >
-                  {totalQuantity}
-                </p>
-              </div>
-            </div>
           </div>
 
           {isLoggedIn ? (
@@ -264,7 +248,7 @@ function HomeContent() {
         </div>
 
         {/* Controls */}
-        <div className="mt-8 flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between w-full">
+        <div className="mt-2 flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between w-full">
           <div className="flex-1 flex flex-col sm:flex-row gap-3 items-start sm:items-center w-full">
             <SearchBar value={searchQuery} onChange={handleSearchChange} />
             <RaritySelect
@@ -306,6 +290,7 @@ function HomeContent() {
           onDelete={handleDeleteCard}
           onUpdate={handleUpdateCard}
           isLoggedIn={isLoggedIn}
+          totalQuantity={totalQuantity}
         />
       </div>
     </div>
