@@ -1,6 +1,6 @@
 "use client";
 
-import { LogOut, Package, Plus } from "lucide-react";
+import { LogOut, Package, Plus, ShoppingBasket } from "lucide-react";
 import { getSession, signOut } from "next-auth/react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useEffect, useState } from "react";
@@ -273,18 +273,31 @@ function HomeContent() {
             />
           </div>
 
-          {isLoggedIn ? (
+          <div className="flex items-center gap-3">
             <Link
-              className="px-6 py-3 bg-primary text-primary-foreground rounded-lg
+              className="px-6 py-3 rounded-lg border-2 border-accent/60 bg-accent/15 text-foreground
+                shadow-md flex items-center gap-2 hover:border-accent hover:bg-accent/25
+                     hover:-translate-y-0.5 transition-all duration-200"
+              style={{ fontFamily: "var(--font-display)" }}
+              href="/basket"
+            >
+              <ShoppingBasket className="w-5 h-5" />
+              Your Basket
+            </Link>
+
+            {isLoggedIn ? (
+              <Link
+                className="px-6 py-3 bg-primary text-primary-foreground rounded-lg
                      flex items-center gap-2 shadow-lg hover:scale-105
                      transition-transform duration-200"
-              style={{ fontFamily: "var(--font-display)" }}
-              href="/add"
-            >
-              <Plus className="w-5 h-5" />
-              ADD CARD
-            </Link>
-          ) : null}
+                style={{ fontFamily: "var(--font-display)" }}
+                href="/add"
+              >
+                <Plus className="w-5 h-5" />
+                ADD CARD
+              </Link>
+            ) : null}
+          </div>
         </div>
 
         {/* Card Grid */}
