@@ -5,6 +5,7 @@ export type BasketItem = {
   setName?: string;
   rarity?: string;
   quantity: number;
+  maxQuantity?: number;
 };
 
 export type BasketTotals = {
@@ -32,6 +33,10 @@ export function sanitizeBasketItems(value: unknown): BasketItem[] {
     const quantity = Number.isFinite(item.quantity)
       ? Math.max(1, Math.floor(Number(item.quantity)))
       : 1;
+    const maxQuantity =
+      typeof item.maxQuantity === "number" && Number.isFinite(item.maxQuantity)
+        ? Math.max(1, Math.floor(item.maxQuantity))
+        : undefined;
 
     if (!cardId || !cardName) continue;
 
@@ -42,6 +47,7 @@ export function sanitizeBasketItems(value: unknown): BasketItem[] {
       setName,
       rarity,
       quantity,
+      ...(maxQuantity !== undefined ? { maxQuantity } : {}),
     });
   }
 
@@ -80,11 +86,15 @@ export function changeBasketItemQuantity(
   delta: number,
 ): BasketItem[] {
   return items
-    .map((item) =>
-      item.cardId === cardId
-        ? { ...item, quantity: Math.max(1, item.quantity + delta) }
-        : item,
-    )
+    .map((item) => {
+      if (item.cardId !== cardId) return item;
+      const newQuantity = Math.max(1, item.quantity + delta);
+      const clamped =
+        item.maxQuantity !== undefined
+          ? Math.min(newQuantity, item.maxQuantity)
+          : newQuantity;
+      return { ...item, quantity: clamped };
+    })
     .filter((item) => item.quantity > 0);
 }
 
@@ -129,6 +139,7 @@ export function addBasketItem(
             setName: item.setName,
             rarity: item.rarity,
             quantity: nextQuantity,
+            ...(safeMax !== undefined ? { maxQuantity: safeMax } : {}),
           }
         : entry,
     );
@@ -139,6 +150,7 @@ export function addBasketItem(
     {
       ...item,
       quantity: nextQuantity,
+      ...(safeMax !== undefined ? { maxQuantity: safeMax } : {}),
     },
   ];
 }

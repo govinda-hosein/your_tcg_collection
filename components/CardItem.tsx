@@ -73,6 +73,7 @@ export function CardItem({ card, onClick, index, onBasketAdd }: CardItemProps) {
           pokemonCard?.images?.small || pokemonCard?.images?.large || "",
         setName: pokemonCard?.set?.name || "",
         rarity: pokemonCard?.rarity || "",
+        maxQuantity: card.quantity,
       },
       basketQuantityToAdd,
       card.quantity,
@@ -190,7 +191,7 @@ export function CardItem({ card, onClick, index, onBasketAdd }: CardItemProps) {
               x{card.quantity}
             </div>
           </div>
-          <div className="mt-2 flex items-center justify-between">
+          <div className="mt-2 flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
             <span
               className={`text-xs px-2 py-0.5 rounded-full bg-linear-to-r ${rarityGradient}
                            text-white font-medium`}

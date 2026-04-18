@@ -156,7 +156,11 @@ export default function BasketPage() {
                             <button
                               type="button"
                               onClick={() => changeQuantity(item.cardId, 1)}
-                              className="h-9 w-9 rounded-lg border border-border hover:bg-muted flex items-center justify-center"
+                              disabled={
+                                item.maxQuantity !== undefined &&
+                                item.quantity >= item.maxQuantity
+                              }
+                              className="h-9 w-9 rounded-lg border border-border hover:bg-muted flex items-center justify-center disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-transparent"
                               aria-label={`Increase quantity for ${item.cardName}`}
                             >
                               <Plus className="h-4 w-4" />
