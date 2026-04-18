@@ -5,10 +5,12 @@ import { getSession, signOut } from "next-auth/react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useEffect, useState } from "react";
 
+import { AppToast } from "@/components/AppToast";
 import { CardGrid } from "@/components/CardGrid";
 import { RaritySelect } from "@/components/RaritySelect";
 import { SearchBar } from "@/components/SearchBar";
 import type { OwnedCardViewModel } from "@/database/ownedCard.model";
+import { useToast } from "@/hooks/useToast";
 import { withBasePath } from "@/lib/url";
 import Link from "next/link";
 
@@ -33,7 +35,7 @@ function HomeContent() {
   const [totalQuantity, setTotalQuantity] = useState(0);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
-  const [basketToast, setBasketToast] = useState<string | null>(null);
+  const { toastMessage, showToast } = useToast(1700);
 
   const rarityFromUrl = searchParams.get("rarity")?.trim() ?? "";
   const searchFromUrl = searchParams.get("search")?.trim() ?? "";
@@ -191,11 +193,6 @@ function HomeContent() {
     }
   };
 
-  const showBasketToast = (message: string) => {
-    setBasketToast(message);
-    window.setTimeout(() => setBasketToast(null), 1700);
-  };
-
   if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -301,24 +298,18 @@ function HomeContent() {
             if (addedQuantity > 0) {
               const quantityLabel =
                 addedQuantity > 1 ? `${addedQuantity}x ` : "";
-              showBasketToast(`Added ${quantityLabel}${cardName} to basket`);
+              showToast(`Added ${quantityLabel}${cardName} to basket`);
               return;
             }
 
-            showBasketToast(
+            showToast(
               `${cardName} is already at max stock (${inBasketQuantity}) in basket`,
             );
           }}
         />
       </div>
 
-      <div className="fixed bottom-4 right-4 z-50 pointer-events-none">
-        {basketToast ? (
-          <div className="rounded-lg border border-emerald-700 bg-emerald-600 px-4 py-2 text-sm text-white shadow-lg">
-            {basketToast}
-          </div>
-        ) : null}
-      </div>
+      <AppToast message={toastMessage} variant="success" />
     </div>
   );
 }
