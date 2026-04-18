@@ -1,8 +1,8 @@
 "use client";
 
-import { useBasket } from "@/hooks/useBasket";
 import { ArrowLeft, Minus, Plus, ShoppingBasket, Trash2 } from "lucide-react";
 
+import { useBasket } from "@/hooks/useBasket";
 import Link from "next/link";
 
 export default function BasketPage() {
@@ -91,7 +91,7 @@ export default function BasketPage() {
                   <ShoppingBasket className="h-8 w-8 mx-auto mb-3 text-muted-foreground" />
                   <p className="text-muted-foreground">Your basket is empty.</p>
                   <p className="text-sm text-muted-foreground/80 mt-1">
-                    Add cards from the left panel to start.
+                    Add cards from the home page.
                   </p>
                 </div>
               ) : (
