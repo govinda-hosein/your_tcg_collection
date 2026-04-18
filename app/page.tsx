@@ -1,17 +1,20 @@
 "use client";
 
-import { LogOut, Plus } from "lucide-react";
+import { LogOut, Package, Plus } from "lucide-react";
 import { getSession, signOut } from "next-auth/react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useEffect, useState } from "react";
 
 import { CardGrid } from "@/components/CardGrid";
-import { CollectionStats } from "@/components/CollectionStats";
 import { RaritySelect } from "@/components/RaritySelect";
 import { SearchBar } from "@/components/SearchBar";
 import type { OwnedCardViewModel } from "@/database/ownedCard.model";
 import { withBasePath } from "@/lib/url";
 import Link from "next/link";
+
+type CollectionStatsResponse = {
+  totalQuantity: number;
+};
 
 function HomeContent() {
   const router = useRouter();
@@ -27,10 +30,12 @@ function HomeContent() {
   const [cards, setCards] = useState<OwnedCardViewModel[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedRarity, setSelectedRarity] = useState("");
+  const [totalQuantity, setTotalQuantity] = useState(0);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
 
   const rarityFromUrl = searchParams.get("rarity")?.trim() ?? "";
+  const searchFromUrl = searchParams.get("search")?.trim() ?? "";
 
   const fetchCards = async (rarity?: string) => {
     const baseApiPath = withBasePath("/api/owned-cards");
@@ -42,21 +47,32 @@ function HomeContent() {
     return (await response.json()) as OwnedCardViewModel[];
   };
 
+  const fetchStats = async () => {
+    const response = await fetch(withBasePath("/api/owned-cards/stats"), {
+      cache: "no-store",
+    });
+    if (!response.ok) throw new Error("Failed to fetch collection stats");
+    return (await response.json()) as CollectionStatsResponse;
+  };
+
   useEffect(() => {
     let isMounted = true;
 
     const loadData = async () => {
       try {
-        const [session, data] = await Promise.all([
+        const [session, data, stats] = await Promise.all([
           getSession(),
           fetchCards(rarityFromUrl || undefined),
+          fetchStats(),
         ]);
 
         if (!isMounted) return;
 
         setSelectedRarity(rarityFromUrl);
+        setSearchQuery(searchFromUrl);
         setIsLoggedIn(!!session?.user?.email);
         setCards(data);
+        setTotalQuantity(stats.totalQuantity);
       } catch (error) {
         console.error("Error loading data:", error);
       } finally {
@@ -69,7 +85,23 @@ function HomeContent() {
     return () => {
       isMounted = false;
     };
-  }, [rarityFromUrl]);
+  }, [rarityFromUrl, searchFromUrl]);
+
+  const handleSearchChange = (query: string) => {
+    setSearchQuery(query);
+
+    const nextParams = new URLSearchParams(searchParams.toString());
+    if (query.trim()) {
+      nextParams.set("search", query.trim());
+    } else {
+      nextParams.delete("search");
+    }
+
+    const nextQuery = nextParams.toString();
+    router.replace(nextQuery ? `${pathname}?${nextQuery}` : pathname, {
+      scroll: false,
+    });
+  };
 
   const handleRarityChange = async (rarity: string) => {
     setSelectedRarity(rarity);
@@ -81,6 +113,7 @@ function HomeContent() {
     } else {
       nextParams.delete("rarity");
     }
+    nextParams.delete("search");
 
     const query = nextParams.toString();
     router.replace(query ? `${pathname}?${query}` : pathname, {
@@ -199,6 +232,22 @@ function HomeContent() {
             <p className="text-muted-foreground">
               {process.env.NEXT_PUBLIC_SITE_DESCRIPTION}
             </p>
+            <div className="mt-4 inline-flex items-center gap-3 rounded-xl border-2 border-primary/20 bg-primary/10 px-4 py-3 shadow-sm">
+              <div className="rounded-lg bg-primary/15 p-2 text-primary">
+                <Package className="h-5 w-5" />
+              </div>
+              <div>
+                <p className="text-[11px] uppercase tracking-[0.2em] text-primary/80">
+                  Total Owned Cards
+                </p>
+                <p
+                  className="text-2xl leading-none text-foreground"
+                  style={{ fontFamily: "var(--font-display)" }}
+                >
+                  {totalQuantity}
+                </p>
+              </div>
+            </div>
           </div>
 
           {isLoggedIn ? (
@@ -214,13 +263,10 @@ function HomeContent() {
           ) : null}
         </div>
 
-        {/* Collection Stats */}
-        <CollectionStats />
-
         {/* Controls */}
-        <div className="mt-8 flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
-          <div className="flex-1 flex flex-col sm:flex-row gap-3 items-start sm:items-center">
-            <SearchBar value={searchQuery} onChange={setSearchQuery} />
+        <div className="mt-8 flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between w-full">
+          <div className="flex-1 flex flex-col sm:flex-row gap-3 items-start sm:items-center w-full">
+            <SearchBar value={searchQuery} onChange={handleSearchChange} />
             <RaritySelect
               value={selectedRarity}
               onChange={handleRarityChange}
