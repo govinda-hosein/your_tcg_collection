@@ -6,7 +6,6 @@ import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useEffect, useState } from "react";
 
 import { CardGrid } from "@/components/CardGrid";
-import { CollectionStats } from "@/components/CollectionStats";
 import { RaritySelect } from "@/components/RaritySelect";
 import { SearchBar } from "@/components/SearchBar";
 import type { OwnedCardViewModel } from "@/database/ownedCard.model";
@@ -232,9 +231,6 @@ function HomeContent() {
             </button>
           ) : null}
         </div>
-
-        {/* Collection Stats */}
-        <CollectionStats />
 
         {/* Controls */}
         <div className="mt-8 flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
