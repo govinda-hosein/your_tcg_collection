@@ -58,17 +58,17 @@ export function CardGrid({
                       relative overflow-hidden"
         >
           {/* Binder holes decoration */}
-          <div className="absolute left-4 top-0 bottom-0 flex flex-col justify-around py-8">
+          <div className="absolute left-3 sm:left-4 top-0 bottom-0 flex flex-col justify-around py-8">
             {[...Array(6)].map((_, i) => (
               <div
                 key={i}
-                className="w-6 h-6 rounded-full bg-muted border-2 border-border shadow-inner"
+                className="w-3 h-3 sm:w-6 sm:h-6 rounded-full bg-muted border-2 border-border shadow-inner"
               />
             ))}
           </div>
 
           {/* Cards */}
-          <div className="pl-12 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+          <div className="pl-2 sm:pl-12 grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-6">
             {cards.map((card, index) => (
               <CardItem
                 key={card.cardId}
