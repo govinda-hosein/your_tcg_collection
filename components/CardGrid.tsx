@@ -11,6 +11,12 @@ interface CardGridProps {
     updates: Partial<OwnedCardViewModel>,
   ) => Promise<void> | void;
   isLoggedIn: boolean;
+  totalQuantity: number;
+  onBasketAdd?: (event: {
+    cardName: string;
+    addedQuantity: number;
+    inBasketQuantity: number;
+  }) => void;
 }
 
 export function CardGrid({
@@ -18,6 +24,8 @@ export function CardGrid({
   onDelete,
   onUpdate,
   isLoggedIn,
+  totalQuantity,
+  onBasketAdd,
 }: CardGridProps) {
   const [selectedCard, setSelectedCard] = useState<OwnedCardViewModel | null>(
     null,
@@ -46,8 +54,11 @@ export function CardGrid({
         {/* Binder Page Header */}
         <div className="mb-6 flex items-center gap-3">
           <div className="flex-1 h-0.5 bg-linear-to-r from-transparent via-border to-transparent" />
-          <span className="text-sm uppercase tracking-widest text-muted-foreground px-4">
+          <span className="inline-flex items-center gap-2 text-sm uppercase tracking-widest text-muted-foreground px-4">
             My Collection
+            <span className="rounded-full border border-primary/30 bg-primary/10 px-2 py-0.5 text-[10px] leading-none text-primary">
+              {totalQuantity} total
+            </span>
           </span>
           <div className="flex-1 h-0.5 bg-linear-to-r from-transparent via-border to-transparent" />
         </div>
@@ -58,17 +69,17 @@ export function CardGrid({
                       relative overflow-hidden"
         >
           {/* Binder holes decoration */}
-          <div className="absolute left-4 top-0 bottom-0 flex flex-col justify-around py-8">
+          <div className="absolute left-3 sm:left-4 top-0 bottom-0 flex flex-col justify-around py-8">
             {[...Array(6)].map((_, i) => (
               <div
                 key={i}
-                className="w-6 h-6 rounded-full bg-muted border-2 border-border shadow-inner"
+                className="w-3 h-3 sm:w-6 sm:h-6 rounded-full bg-muted border-2 border-border shadow-inner"
               />
             ))}
           </div>
 
           {/* Cards */}
-          <div className="pl-12 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+          <div className="pl-2 sm:pl-12 grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-6">
             {cards.map((card, index) => (
               <CardItem
                 key={card.cardId}
@@ -77,6 +88,7 @@ export function CardGrid({
                 onDelete={onDelete}
                 index={index}
                 isLoggedIn={isLoggedIn}
+                onBasketAdd={onBasketAdd}
               />
             ))}
           </div>

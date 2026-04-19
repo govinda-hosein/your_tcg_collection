@@ -69,7 +69,7 @@ export function CardDetailModal({
         {/* Card Display */}
         <div className="grid md:grid-cols-[1.2fr_1fr]">
           {/* Left: Card Image */}
-          <div className="aspect-2/3 relative overflow-hidden bg-black/5 md:aspect-auto md:h-[78vh]">
+          <div className="h-[55vh] relative overflow-hidden bg-black/5 flex items-center justify-center md:h-[78vh]">
             <Image
               src={
                 pokemonCard?.images?.large ||
@@ -84,7 +84,7 @@ export function CardDetailModal({
           </div>
 
           {/* Right: Card Details */}
-          <div className="p-6 md:p-8 flex flex-col">
+          <div className="p-6 pt-0 md:p-8 md:pt-8 flex flex-col">
             {!isEditing ? (
               <>
                 {/* View Mode */}
@@ -102,7 +102,7 @@ export function CardDetailModal({
                     {pokemonCard?.rarity || "Rare"}
                   </div>
 
-                  <div className="space-y-3 mt-6">
+                  <div className="md:space-y-3 md:mt-6">
                     <div className="flex items-center justify-between py-2 border-b border-border">
                       <span className="text-muted-foreground">Set</span>
                       <span className="font-medium">
@@ -127,7 +127,7 @@ export function CardDetailModal({
                     )}
 
                     <div className="flex items-center justify-between py-2 border-b border-border">
-                      <span className="text-muted-foreground">Quantity</span>
+                      <span className="text-muted-foreground">In Stock</span>
                       <span className="font-bold text-xl">
                         ×{card.quantity}
                       </span>

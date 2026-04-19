@@ -1,14 +1,16 @@
 "use client";
 
-import { LogOut, Package, Plus } from "lucide-react";
+import { LogOut, Plus, ShoppingBasket } from "lucide-react";
 import { getSession, signOut } from "next-auth/react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useEffect, useState } from "react";
 
+import { AppToast } from "@/components/AppToast";
 import { CardGrid } from "@/components/CardGrid";
 import { RaritySelect } from "@/components/RaritySelect";
 import { SearchBar } from "@/components/SearchBar";
 import type { OwnedCardViewModel } from "@/database/ownedCard.model";
+import { useToast } from "@/hooks/useToast";
 import { withBasePath } from "@/lib/url";
 import Link from "next/link";
 
@@ -33,6 +35,7 @@ function HomeContent() {
   const [totalQuantity, setTotalQuantity] = useState(0);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const { toastMessage, showToast } = useToast(1700);
 
   const rarityFromUrl = searchParams.get("rarity")?.trim() ?? "";
   const searchFromUrl = searchParams.get("search")?.trim() ?? "";
@@ -232,22 +235,6 @@ function HomeContent() {
             <p className="text-muted-foreground">
               {process.env.NEXT_PUBLIC_SITE_DESCRIPTION}
             </p>
-            <div className="mt-4 inline-flex items-center gap-3 rounded-xl border-2 border-primary/20 bg-primary/10 px-4 py-3 shadow-sm">
-              <div className="rounded-lg bg-primary/15 p-2 text-primary">
-                <Package className="h-5 w-5" />
-              </div>
-              <div>
-                <p className="text-[11px] uppercase tracking-[0.2em] text-primary/80">
-                  Total Owned Cards
-                </p>
-                <p
-                  className="text-2xl leading-none text-foreground"
-                  style={{ fontFamily: "var(--font-display)" }}
-                >
-                  {totalQuantity}
-                </p>
-              </div>
-            </div>
           </div>
 
           {isLoggedIn ? (
@@ -264,7 +251,7 @@ function HomeContent() {
         </div>
 
         {/* Controls */}
-        <div className="mt-8 flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between w-full">
+        <div className="mt-2 flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between w-full">
           <div className="flex-1 flex flex-col sm:flex-row gap-3 items-start sm:items-center w-full">
             <SearchBar value={searchQuery} onChange={handleSearchChange} />
             <RaritySelect
@@ -273,18 +260,31 @@ function HomeContent() {
             />
           </div>
 
-          {isLoggedIn ? (
+          <div className="flex items-center gap-3">
             <Link
-              className="px-6 py-3 bg-primary text-primary-foreground rounded-lg
+              className="px-6 py-3 rounded-lg border-2 border-accent/60 bg-accent/15 text-foreground
+                shadow-md flex items-center gap-2 hover:border-accent hover:bg-accent/25
+                     hover:-translate-y-0.5 transition-all duration-200"
+              style={{ fontFamily: "var(--font-display)" }}
+              href="/basket"
+            >
+              <ShoppingBasket className="w-5 h-5" />
+              Your Basket
+            </Link>
+
+            {isLoggedIn ? (
+              <Link
+                className="px-6 py-3 bg-primary text-primary-foreground rounded-lg
                      flex items-center gap-2 shadow-lg hover:scale-105
                      transition-transform duration-200"
-              style={{ fontFamily: "var(--font-display)" }}
-              href="/add"
-            >
-              <Plus className="w-5 h-5" />
-              ADD CARD
-            </Link>
-          ) : null}
+                style={{ fontFamily: "var(--font-display)" }}
+                href="/add"
+              >
+                <Plus className="w-5 h-5" />
+                ADD CARD
+              </Link>
+            ) : null}
+          </div>
         </div>
 
         {/* Card Grid */}
@@ -293,8 +293,23 @@ function HomeContent() {
           onDelete={handleDeleteCard}
           onUpdate={handleUpdateCard}
           isLoggedIn={isLoggedIn}
+          totalQuantity={totalQuantity}
+          onBasketAdd={({ cardName, addedQuantity, inBasketQuantity }) => {
+            if (addedQuantity > 0) {
+              const quantityLabel =
+                addedQuantity > 1 ? `${addedQuantity}x ` : "";
+              showToast(`Added ${quantityLabel}${cardName} to basket`);
+              return;
+            }
+
+            showToast(
+              `${cardName} is already at max stock (${inBasketQuantity}) in basket`,
+            );
+          }}
         />
       </div>
+
+      <AppToast message={toastMessage} variant="success" />
     </div>
   );
 }

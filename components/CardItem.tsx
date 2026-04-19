@@ -1,7 +1,19 @@
 import type { OwnedCardViewModel } from "@/database/ownedCard.model";
+import {
+  addBasketItem,
+  readBasketFromStorage,
+  writeBasketToStorage,
+} from "@/lib/basket";
 import { RARITY_COLORS } from "@/lib/constants";
 import { isHoloRarity } from "@/lib/functions";
 import Image from "next/image";
+import { useEffect, useMemo, useState } from "react";
+
+type BasketAddEvent = {
+  cardName: string;
+  addedQuantity: number;
+  inBasketQuantity: number;
+};
 
 interface CardItemProps {
   card: OwnedCardViewModel;
@@ -9,6 +21,7 @@ interface CardItemProps {
   onDelete: (id: string) => void;
   index: number;
   isLoggedIn: boolean;
+  onBasketAdd?: (event: BasketAddEvent) => void;
 }
 
 const typeColors: Record<string, string> = {
@@ -24,11 +37,63 @@ const typeColors: Record<string, string> = {
   Fairy: "#ffc6ff",
 };
 
-export function CardItem({ card, onClick, index }: CardItemProps) {
+export function CardItem({ card, onClick, index, onBasketAdd }: CardItemProps) {
   const pokemonCard = card.card;
   const rarityGradient =
     RARITY_COLORS[pokemonCard?.rarity ?? ""] || "from-gray-300 to-gray-200";
   const isHolo = isHoloRarity(pokemonCard?.rarity);
+  const [basketQuantityToAdd, setBasketQuantityToAdd] = useState(1);
+  const [justAdded, setJustAdded] = useState(false);
+  const [inBasketQuantity, setInBasketQuantity] = useState(0);
+
+  const quantityOptions = useMemo(
+    () => Array.from({ length: Math.max(1, card.quantity) }, (_, i) => i + 1),
+    [card.quantity],
+  );
+
+  useEffect(() => {
+    const existingItems = readBasketFromStorage();
+    const currentInBasket =
+      existingItems.find((item) => item.cardId === card.cardId)?.quantity ?? 0;
+    setInBasketQuantity(Math.min(currentInBasket, card.quantity));
+  }, [card.cardId, card.quantity]);
+
+  const handleAddToBasket = (event: React.MouseEvent<HTMLButtonElement>) => {
+    event.stopPropagation();
+
+    const existingItems = readBasketFromStorage();
+    const previousInBasket =
+      existingItems.find((item) => item.cardId === card.cardId)?.quantity ?? 0;
+    const nextItems = addBasketItem(
+      existingItems,
+      {
+        cardId: card.cardId,
+        cardName: pokemonCard?.name || "Unknown Card",
+        cardImage:
+          pokemonCard?.images?.small || pokemonCard?.images?.large || "",
+        setName: pokemonCard?.set?.name || "",
+        rarity: pokemonCard?.rarity || "",
+        maxQuantity: card.quantity,
+      },
+      basketQuantityToAdd,
+      card.quantity,
+    );
+
+    writeBasketToStorage(nextItems);
+    const nextInBasket =
+      nextItems.find((item) => item.cardId === card.cardId)?.quantity ?? 0;
+    const addedQuantity = Math.max(0, nextInBasket - previousInBasket);
+
+    setInBasketQuantity(nextInBasket);
+    onBasketAdd?.({
+      cardName: pokemonCard?.name || "Unknown Card",
+      addedQuantity,
+      inBasketQuantity: nextInBasket,
+    });
+
+    setJustAdded(true);
+    window.setTimeout(() => setJustAdded(false), 1200);
+  };
 
   return (
     <div
@@ -84,7 +149,7 @@ export function CardItem({ card, onClick, index }: CardItemProps) {
           {/* Placeholder Pokemon Silhouette */}
           <div className="absolute inset-0 flex items-center justify-center bg-black/5">
             <Image
-              src={pokemonCard?.images?.small || "/placeholder.png"}
+              src={pokemonCard?.images?.large || "/placeholder.png"}
               alt={pokemonCard?.name || "Pokemon Card"}
               fill
               sizes="(max-width: 640px) 100vw, (max-width: 1280px) 33vw, 25vw"
@@ -95,7 +160,7 @@ export function CardItem({ card, onClick, index }: CardItemProps) {
 
         {/* Card Info */}
         <div className="p-3 bg-white">
-          <div className="flex items-center justify-between text-xs text-muted-foreground mb-2">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between text-xs text-muted-foreground mb-2">
             <h3 className="font-bold text-sm mb-1 truncate">
               {pokemonCard?.name || "Unknown Card"}
             </h3>
@@ -126,13 +191,47 @@ export function CardItem({ card, onClick, index }: CardItemProps) {
               x{card.quantity}
             </div>
           </div>
-          <div className="mt-2 flex items-center justify-between">
+          <div className="mt-2 flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
             <span
               className={`text-xs px-2 py-0.5 rounded-full bg-linear-to-r ${rarityGradient}
                            text-white font-medium`}
             >
               {pokemonCard?.rarity || "Rare"}
             </span>
+            <span className="text-[11px] text-muted-foreground font-medium">
+              In Basket: {inBasketQuantity}
+            </span>
+          </div>
+
+          <div
+            className="mt-2 flex items-center gap-2"
+            onClick={(event) => event.stopPropagation()}
+          >
+            {card.quantity > 1 ? (
+              <select
+                value={basketQuantityToAdd}
+                onChange={(event) =>
+                  setBasketQuantityToAdd(parseInt(event.target.value, 10) || 1)
+                }
+                className="w-14 rounded-md border border-border bg-white px-1 py-1 text-xs"
+                aria-label={`Select quantity for ${pokemonCard?.name || "card"}`}
+              >
+                {quantityOptions.map((qty) => (
+                  <option key={qty} value={qty}>
+                    {qty}
+                  </option>
+                ))}
+              </select>
+            ) : null}
+
+            <button
+              type="button"
+              onClick={handleAddToBasket}
+              className="flex-1 rounded-md border border-accent/50 bg-accent/10 px-2 py-1.5 text-xs font-semibold
+                         hover:bg-accent/20 transition-colors duration-200"
+            >
+              {justAdded ? "Added" : "Add to Basket"}
+            </button>
           </div>
         </div>
       </div>
