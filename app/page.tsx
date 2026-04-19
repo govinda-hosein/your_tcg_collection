@@ -1,9 +1,15 @@
 "use client";
 
-import { LogOut, Plus, ShoppingBasket } from "lucide-react";
+import {
+  ChevronLeft,
+  ChevronRight,
+  LogOut,
+  Plus,
+  ShoppingBasket,
+} from "lucide-react";
 import { getSession, signOut } from "next-auth/react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { Suspense, useEffect, useState } from "react";
+import { Suspense, useEffect, useRef, useState } from "react";
 
 import { AppToast } from "@/components/AppToast";
 import { CardGrid } from "@/components/CardGrid";
@@ -17,6 +23,8 @@ import Link from "next/link";
 type CollectionStatsResponse = {
   totalQuantity: number;
 };
+
+const CARDS_PER_PAGE = 12;
 
 function HomeContent() {
   const router = useRouter();
@@ -36,9 +44,12 @@ function HomeContent() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const { toastMessage, showToast } = useToast(1700);
+  const listTopRef = useRef<HTMLDivElement | null>(null);
+  const shouldScrollToListRef = useRef(false);
 
   const rarityFromUrl = searchParams.get("rarity")?.trim() ?? "";
   const searchFromUrl = searchParams.get("search")?.trim() ?? "";
+  const rawPageFromUrl = Number(searchParams.get("page") ?? "1");
 
   const fetchCards = async (rarity?: string) => {
     const baseApiPath = withBasePath("/api/owned-cards");
@@ -99,6 +110,7 @@ function HomeContent() {
     } else {
       nextParams.delete("search");
     }
+    nextParams.delete("page");
 
     const nextQuery = nextParams.toString();
     router.replace(nextQuery ? `${pathname}?${nextQuery}` : pathname, {
@@ -117,6 +129,7 @@ function HomeContent() {
       nextParams.delete("rarity");
     }
     nextParams.delete("search");
+    nextParams.delete("page");
 
     const query = nextParams.toString();
     router.replace(query ? `${pathname}?${query}` : pathname, {
@@ -138,6 +151,67 @@ function HomeContent() {
     const query = searchQuery.toLowerCase();
     return cardName.includes(query) || setName.includes(query);
   });
+
+  const totalPages = Math.max(
+    1,
+    Math.ceil(filteredCards.length / CARDS_PER_PAGE),
+  );
+  const pageFromUrl =
+    Number.isFinite(rawPageFromUrl) && rawPageFromUrl > 0
+      ? Math.floor(rawPageFromUrl)
+      : 1;
+  const currentPage = Math.min(pageFromUrl, totalPages);
+  const pageStart = (currentPage - 1) * CARDS_PER_PAGE;
+  const paginatedCards = filteredCards.slice(
+    pageStart,
+    pageStart + CARDS_PER_PAGE,
+  );
+
+  const setPage = (nextPage: number) => {
+    const safePage = Math.max(1, Math.min(nextPage, totalPages));
+    if (safePage === currentPage) return;
+
+    const nextParams = new URLSearchParams(searchParams.toString());
+
+    if (safePage === 1) {
+      nextParams.delete("page");
+    } else {
+      nextParams.set("page", String(safePage));
+    }
+    shouldScrollToListRef.current = true;
+
+    const nextQuery = nextParams.toString();
+    router.replace(nextQuery ? `${pathname}?${nextQuery}` : pathname, {
+      scroll: false,
+    });
+  };
+
+  useEffect(() => {
+    if (pageFromUrl !== currentPage) {
+      const nextParams = new URLSearchParams(searchParams.toString());
+
+      if (currentPage === 1) {
+        nextParams.delete("page");
+      } else {
+        nextParams.set("page", String(currentPage));
+      }
+
+      const nextQuery = nextParams.toString();
+      router.replace(nextQuery ? `${pathname}?${nextQuery}` : pathname, {
+        scroll: false,
+      });
+    }
+  }, [currentPage, pageFromUrl, pathname, router, searchParams]);
+
+  useEffect(() => {
+    if (!shouldScrollToListRef.current) return;
+
+    listTopRef.current?.scrollIntoView({
+      behavior: "smooth",
+      block: "start",
+    });
+    shouldScrollToListRef.current = false;
+  }, [currentPage]);
 
   const handleDeleteCard = async (id: string) => {
     try {
@@ -287,9 +361,11 @@ function HomeContent() {
           </div>
         </div>
 
+        <div ref={listTopRef} />
+
         {/* Card Grid */}
         <CardGrid
-          cards={filteredCards}
+          cards={paginatedCards}
           onDelete={handleDeleteCard}
           onUpdate={handleUpdateCard}
           isLoggedIn={isLoggedIn}
@@ -307,6 +383,49 @@ function HomeContent() {
             );
           }}
         />
+
+        {filteredCards.length > 0 && totalPages > 1 ? (
+          <div className="mt-6 flex flex-col items-center gap-3 text-center">
+            <p className="text-sm text-muted-foreground">
+              Showing {pageStart + 1}-
+              {Math.min(pageStart + CARDS_PER_PAGE, filteredCards.length)} of{" "}
+              {filteredCards.length} cards
+            </p>
+
+            <div className="flex items-center justify-center gap-2">
+              <button
+                type="button"
+                onClick={() => setPage(currentPage - 1)}
+                disabled={currentPage === 1}
+                className="inline-flex items-center gap-2 rounded-lg border border-border px-3 py-2 text-sm hover:bg-muted disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:bg-transparent"
+              >
+                <ChevronLeft className="h-4 w-4" />
+                Prev
+              </button>
+
+              <div className="rounded-lg border border-border bg-card px-3 py-2 text-sm text-muted-foreground">
+                Page{" "}
+                <span className="font-semibold text-foreground">
+                  {currentPage}
+                </span>{" "}
+                of{" "}
+                <span className="font-semibold text-foreground">
+                  {totalPages}
+                </span>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => setPage(currentPage + 1)}
+                disabled={currentPage === totalPages}
+                className="inline-flex items-center gap-2 rounded-lg border border-border px-3 py-2 text-sm hover:bg-muted disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:bg-transparent"
+              >
+                Next
+                <ChevronRight className="h-4 w-4" />
+              </button>
+            </div>
+          </div>
+        ) : null}
       </div>
 
       <AppToast message={toastMessage} variant="success" />
