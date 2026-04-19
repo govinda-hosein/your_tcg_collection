@@ -2,8 +2,10 @@
 
 import { ArrowLeft, Loader2, Search, X, ZoomIn } from "lucide-react";
 
+import { AppToast } from "@/components/AppToast";
 import { CardSearchResult } from "@/components/CardSearchResult";
 import type { PokemonCardViewModel } from "@/database";
+import { useToast } from "@/hooks/useToast";
 import { withBasePath } from "@/lib/url";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
@@ -22,6 +24,7 @@ export default function AddCardPage() {
   const [isImageModalOpen, setIsImageModalOpen] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [quantity, setQuantity] = useState(1);
+  const { toastMessage, showToast } = useToast(1700);
 
   const handleSearch = async (query: string) => {
     setSearchQuery(query);
@@ -82,9 +85,11 @@ export default function AddCardPage() {
         return;
       }
 
+      showToast(
+        `Added ${quantity > 1 ? `${quantity}x ` : ""}${selectedCard.name} to collection`,
+      );
       setSelectedCard(null);
       setQuantity(1);
-      router.push("/");
     } catch (error) {
       console.error("Failed to add card to collection", error);
     } finally {
@@ -348,6 +353,8 @@ export default function AddCardPage() {
           }
         }
       `}</style>
+
+      <AppToast message={toastMessage} variant="success" />
     </div>
   );
 }
