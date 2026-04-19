@@ -2,6 +2,7 @@ import "./globals.css";
 
 import { Bowlby_One, Outfit } from "next/font/google";
 
+import { Footer } from "@/components/Footer";
 import type { Metadata } from "next";
 import { Providers } from "./providers";
 
@@ -69,7 +70,10 @@ export default function RootLayout({
       className={`${outfit.variable} ${bowlbyOne.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col">
-        <Providers>{children}</Providers>
+        <div className="flex flex-col grow">
+          <Providers>{children}</Providers>
+        </div>
+        <Footer />
       </body>
     </html>
   );
