@@ -1,5 +1,7 @@
 import type { OwnedCardViewModel } from "@/database/ownedCard.model";
+import { useToast } from "@/hooks/useToast";
 import { useState } from "react";
+import { AppToast } from "./AppToast";
 import { CardDetailModal } from "./CardDetailModal";
 import { CardItem } from "./CardItem";
 
@@ -30,6 +32,7 @@ export function CardGrid({
   const [selectedCard, setSelectedCard] = useState<OwnedCardViewModel | null>(
     null,
   );
+  const { toastMessage, showToast } = useToast(1700);
 
   if (cards.length === 0) {
     return (
@@ -104,6 +107,11 @@ export function CardGrid({
             await onUpdate(selectedCard.cardId, updates);
             setSelectedCard({ ...selectedCard, ...updates });
           }}
+          onSaveSuccess={(updatedQuantity) => {
+            showToast(
+              `Updated ${selectedCard.card?.name ?? "card"} to stock ${updatedQuantity}`,
+            );
+          }}
           onDelete={() => {
             onDelete(selectedCard.cardId);
             setSelectedCard(null);
@@ -111,6 +119,8 @@ export function CardGrid({
           isLoggedIn={isLoggedIn}
         />
       )}
+
+      <AppToast message={toastMessage} variant="success" />
     </>
   );
 }

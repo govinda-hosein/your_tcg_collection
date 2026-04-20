@@ -1,8 +1,17 @@
 "use client";
 
-import { ArrowLeft, Minus, Plus, ShoppingBasket, Trash2 } from "lucide-react";
+import {
+  ArrowLeft,
+  Copy,
+  Minus,
+  Plus,
+  ShoppingBasket,
+  Trash2,
+} from "lucide-react";
 
+import { AppToast } from "@/components/AppToast";
 import { useBasket } from "@/hooks/useBasket";
+import { useToast } from "@/hooks/useToast";
 import { RARITY_COLORS } from "@/lib/constants";
 import Image from "next/image";
 import Link from "next/link";
@@ -10,6 +19,30 @@ import Link from "next/link";
 export default function BasketPage() {
   const { items, isHydrated, totals, changeQuantity, removeItem, clearBasket } =
     useBasket();
+  const { toastMessage, showToast } = useToast(1700);
+
+  const handleCopyToClipboard = async () => {
+    if (items.length === 0) {
+      showToast("Your basket is empty");
+      return;
+    }
+
+    const clipboardText = items
+      .map(
+        (item, index) =>
+          `${index + 1}. ${item.cardName} | Qty: ${item.quantity}${
+            item.setName ? ` | Set: ${item.setName}` : ""
+          }${item.rarity ? ` | Rarity: ${item.rarity}` : ""}`,
+      )
+      .join("\n");
+
+    try {
+      await navigator.clipboard.writeText(clipboardText);
+      showToast(`Copied ${items.length} cards to clipboard`);
+    } catch {
+      showToast("Failed to copy basket");
+    }
+  };
 
   return (
     <div className="min-h-screen relative overflow-hidden">
@@ -73,15 +106,27 @@ export default function BasketPage() {
                   </div>
                 </div>
 
-                <button
-                  type="button"
-                  onClick={clearBasket}
-                  disabled={items.length === 0}
-                  className="inline-flex items-center gap-2 rounded-lg border border-border px-3 py-2 text-sm hover:bg-muted disabled:opacity-50 disabled:hover:bg-transparent"
-                >
-                  <Trash2 className="h-4 w-4" />
-                  Clear
-                </button>
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={handleCopyToClipboard}
+                    disabled={items.length === 0}
+                    className="inline-flex items-center gap-2 rounded-lg border border-border px-3 py-2 text-sm hover:bg-muted disabled:opacity-50 disabled:hover:bg-transparent"
+                  >
+                    <Copy className="h-4 w-4" />
+                    Copy to Clipboard
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={clearBasket}
+                    disabled={items.length === 0}
+                    className="inline-flex items-center gap-2 rounded-lg border border-border px-3 py-2 text-sm hover:bg-muted disabled:opacity-50 disabled:hover:bg-transparent"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                    Clear
+                  </button>
+                </div>
               </div>
 
               {!isHydrated ? (
@@ -184,6 +229,8 @@ export default function BasketPage() {
           </section>
         </div>
       </div>
+
+      <AppToast message={toastMessage} variant="success" />
     </div>
   );
 }
