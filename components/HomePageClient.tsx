@@ -48,6 +48,7 @@ function HomeContent() {
   const { toastMessage, showToast } = useToast(1700);
   const listTopRef = useRef<HTMLDivElement | null>(null);
   const shouldScrollToListRef = useRef(false);
+  const previousSearchQueryRef = useRef(searchQuery);
 
   const rarityFromUrl = searchParams.get("rarity")?.trim() ?? "";
   const rawPageFromUrl = Number(searchParams.get("page") ?? "1");
@@ -108,22 +109,30 @@ function HomeContent() {
   useEffect(() => {
     const nextParams = new URLSearchParams(searchParams.toString());
     const normalizedSearch = searchQuery.trim();
+    const previousSearch = previousSearchQueryRef.current.trim();
+    const didSearchChange = normalizedSearch !== previousSearch;
 
     if (normalizedSearch) {
       nextParams.set("search", normalizedSearch);
     } else {
       nextParams.delete("search");
     }
-    nextParams.delete("page");
+    if (didSearchChange) {
+      nextParams.delete("page");
+    }
 
     const currentQuery = searchParams.toString();
     const nextQuery = nextParams.toString();
-    if (nextQuery === currentQuery) return;
+    if (nextQuery === currentQuery) {
+      previousSearchQueryRef.current = searchQuery;
+      return;
+    }
 
     const timeout = globalThis.setTimeout(() => {
       router.replace(nextQuery ? `${pathname}?${nextQuery}` : pathname, {
         scroll: false,
       });
+      previousSearchQueryRef.current = searchQuery;
     }, 400);
 
     return () => {
