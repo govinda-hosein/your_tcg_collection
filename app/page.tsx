@@ -38,7 +38,9 @@ function HomeContent() {
   const titleEnd = words.slice(splitIndex).join(" ");
 
   const [cards, setCards] = useState<OwnedCardViewModel[]>([]);
-  const [searchQuery, setSearchQuery] = useState("");
+  const [searchQuery, setSearchQuery] = useState(
+    () => searchParams.get("search")?.trim() ?? "",
+  );
   const [selectedRarity, setSelectedRarity] = useState("");
   const [totalQuantity, setTotalQuantity] = useState(0);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -48,7 +50,6 @@ function HomeContent() {
   const shouldScrollToListRef = useRef(false);
 
   const rarityFromUrl = searchParams.get("rarity")?.trim() ?? "";
-  const searchFromUrl = searchParams.get("search")?.trim() ?? "";
   const rawPageFromUrl = Number(searchParams.get("page") ?? "1");
 
   const fetchCards = async (rarity?: string) => {
@@ -83,7 +84,6 @@ function HomeContent() {
         if (!isMounted) return;
 
         setSelectedRarity(rarityFromUrl);
-        setSearchQuery(searchFromUrl);
         setIsLoggedIn(!!session?.user?.email);
         setCards(data);
         setTotalQuantity(stats.totalQuantity);
@@ -99,24 +99,37 @@ function HomeContent() {
     return () => {
       isMounted = false;
     };
-  }, [rarityFromUrl, searchFromUrl]);
+  }, [rarityFromUrl]);
 
   const handleSearchChange = (query: string) => {
     setSearchQuery(query);
+  };
 
+  useEffect(() => {
     const nextParams = new URLSearchParams(searchParams.toString());
-    if (query.trim()) {
-      nextParams.set("search", query.trim());
+    const normalizedSearch = searchQuery.trim();
+
+    if (normalizedSearch) {
+      nextParams.set("search", normalizedSearch);
     } else {
       nextParams.delete("search");
     }
     nextParams.delete("page");
 
+    const currentQuery = searchParams.toString();
     const nextQuery = nextParams.toString();
-    router.replace(nextQuery ? `${pathname}?${nextQuery}` : pathname, {
-      scroll: false,
-    });
-  };
+    if (nextQuery === currentQuery) return;
+
+    const timeout = globalThis.setTimeout(() => {
+      router.replace(nextQuery ? `${pathname}?${nextQuery}` : pathname, {
+        scroll: false,
+      });
+    }, 400);
+
+    return () => {
+      globalThis.clearTimeout(timeout);
+    };
+  }, [searchQuery, pathname, router, searchParams]);
 
   const handleRarityChange = async (rarity: string) => {
     setSelectedRarity(rarity);
