@@ -1,6 +1,8 @@
 ## Your TCG Collection
 
-Your TCG Collection is a modern web app for tracking and managing a personal Pokemon trading card collection. It lets collectors search cards, add owned cards with stock quantities and edit inventory. Site visitors can build a basket of cards, and quickly export basket contents to the clipboard for sharing.
+Your TCG Collection is a modern web app for tracking and managing a personal Pokemon trading card collection. It lets you search cards, add owned cards with stock quantities and edit inventory.
+
+Site visitors can build a basket of cards, and quickly export basket contents to the clipboard for requesting them. This site is not designed to facilitate anonymous transactions but rather only with groups that you know and trust. If you deploy your own app instance, it should only be used with those groups.
 
 The app is designed for fast day-to-day collection management with a responsive UI, URL-based filtering and pagination, helpful toast feedback, and stock-aware basket controls that prevent over-requesting beyond available quantity.
 
