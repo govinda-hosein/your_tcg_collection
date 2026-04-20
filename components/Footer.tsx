@@ -12,8 +12,8 @@ export function Footer() {
         >
           <Code className="h-3.5 w-3.5 text-primary group-hover:text-primary/80" />
           <span className="text-xs font-medium text-primary group-hover:text-primary/80">
-            Built with ❤️ - Want your own collection site? Check out the repo on
-            GitHub!
+            Built with ❤️ - Want your own collection site? Click here to check
+            out the repo on GitHub!
           </span>
         </a>
       </div>

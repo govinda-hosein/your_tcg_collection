@@ -23,8 +23,14 @@ export default function AddCardPage() {
   );
   const [isImageModalOpen, setIsImageModalOpen] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
-  const [quantity, setQuantity] = useState(1);
+  const [quantityInput, setQuantityInput] = useState("1");
   const { toastMessage, showToast } = useToast(1700);
+
+  const getNormalizedQuantity = () => {
+    const parsed = Number.parseInt(quantityInput, 10);
+    if (!Number.isFinite(parsed) || parsed < 1) return 1;
+    return parsed;
+  };
 
   const handleSearch = async (query: string) => {
     setSearchQuery(query);
@@ -62,6 +68,7 @@ export default function AddCardPage() {
 
   const handleAddToCollection = async () => {
     if (!selectedCard) return;
+    const quantity = getNormalizedQuantity();
 
     setIsSaving(true);
 
@@ -89,7 +96,7 @@ export default function AddCardPage() {
         `Added ${quantity > 1 ? `${quantity}x ` : ""}${selectedCard.name} to collection`,
       );
       setSelectedCard(null);
-      setQuantity(1);
+      setQuantityInput("1");
     } catch (error) {
       console.error("Failed to add card to collection", error);
     } finally {
@@ -259,9 +266,10 @@ export default function AddCardPage() {
                     <input
                       type="number"
                       min="1"
-                      value={quantity}
-                      onChange={(e) =>
-                        setQuantity(parseInt(e.target.value) || 1)
+                      value={quantityInput}
+                      onChange={(e) => setQuantityInput(e.target.value)}
+                      onBlur={() =>
+                        setQuantityInput(String(getNormalizedQuantity()))
                       }
                       className="w-full px-4 py-3 bg-input-background border-2 border-border
                                rounded-lg focus:outline-none focus:border-primary
@@ -274,7 +282,10 @@ export default function AddCardPage() {
                 <div className="flex gap-4 pt-4">
                   <button
                     type="button"
-                    onClick={() => setSelectedCard(null)}
+                    onClick={() => {
+                      setSelectedCard(null);
+                      setQuantityInput("1");
+                    }}
                     className="flex-1 px-6 py-4 border-2 border-border rounded-lg
                              hover:bg-muted transition-all duration-200 text-lg"
                   >
