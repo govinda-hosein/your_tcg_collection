@@ -1,36 +1,68 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+## Your TCG Collection
+
+Your TCG Collection is a modern web app for tracking and managing a personal Pokemon trading card collection. It lets you search cards, add owned cards with stock quantities and edit inventory.
+
+Site visitors can build a basket of cards, and quickly export basket contents to the clipboard for requesting them. This site is not designed to facilitate anonymous transactions but rather only with groups that you know and trust. If you deploy your own app instance, it should only be used with those groups.
+
+The app is designed for fast day-to-day collection management with a responsive UI, URL-based filtering and pagination, helpful toast feedback, and stock-aware basket controls that prevent over-requesting beyond available quantity.
+
+| Home                                                                           | Card Modal                                                                           | Basket                                                                       |
+| ------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------ | ---------------------------------------------------------------------------- |
+| <img src="external/docs/images/home_page.png" alt="Login page" height="600" /> | <img src="external/docs/images/card_modal.png" alt="Collection page" height="600" /> | <img src="external/docs/images/basket.png" alt="Basket page" height="600" /> |
 
 ## Getting Started
 
-First, run the development server:
+To get started, you must first populate a `.env` file.
+
+### Environment Variables
+
+This project includes a `.env.example` file. Copy it to `.env` and fill in the required values for your environment. The sections below describe what's required.
+
+#### App Branding and URL
+
+- `NEXT_PUBLIC_SITE_TITLE`: Site title shown in browser tabs, on the homepage and metadata
+- `NEXT_PUBLIC_SITE_DESCRIPTION`: Short site description used in the homepage and metadata.
+- `NEXT_PUBLIC_BASE_URL`: Public origin for the app (for example `http://localhost:3000` in local dev).
+- `NEXT_PUBLIC_BASE_PATH`: Optional base path if deploying under a subpath (leave empty for root).
+
+#### Access Control
+
+- `ADMIN_EMAILS`: Comma-separated list of emails allowed to access admin actions.
+
+#### Authentication (Auth.js / NextAuth)
+
+- `NEXTAUTH_SECRET`: Secret used by Auth.js to sign/encrypt session data.
+  You can generate one with the command: `openssl rand -base64 32`
+- `NEXTAUTH_URL`: Full auth callback base URL, it's `{NEXT_PUBLIC_BASE_URL}{NEXT_PUBLIC_BASE_PATH}/api/auth`.
+- `AUTH_GOOGLE_ID`: Google OAuth client ID. Obtained by configuring a project on `google cloud console`
+- `AUTH_GOOGLE_SECRET`: Google OAuth client secret. Obtained by configuring a project on `google cloud console`
+
+#### Database
+
+- `MONGODB_URI`: MongoDB connection string used by the app. Consider using `MongoDB Atlas`, they have an amazing free tier.
+
+###
+
+Once your `.env` file is populated, you're ready to get started! Run these commands on your console to spin up a local development instance of the app.
 
 ```bash
+gitsubmodule update --init --recursive
+npm install
+npm run seed:sets
+npm run seed:pokemon-cards
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Note: you must run the seed commands on your production instance to ensure your database is populated with cards.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Admin Actions
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+To login as an admin, visit the `/admin` URL. Then login with a gmail that you previously added to the `ADMIN_EMAILS` environment variable.
 
-## Learn More
+<img src="external/docs/images/login_page.png" alt="Login page" height="600" />
 
-To learn more about Next.js, take a look at the following resources:
+Once logged in as an admin, you'll be able to access `Add Card` and `Edit` functionalities.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Deployment
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+`Netlify` is a great option to deploy this app. It can easily connect to your github and deploy to a public URL with amazing limits for free tier.
