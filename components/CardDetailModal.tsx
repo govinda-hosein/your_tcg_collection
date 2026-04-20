@@ -9,6 +9,7 @@ interface CardDetailModalProps {
   card: OwnedCardViewModel;
   onClose: () => void;
   onUpdate: (updates: Partial<OwnedCardViewModel>) => Promise<void> | void;
+  onSaveSuccess?: (updatedQuantity: number) => void;
   onDelete: () => void;
   isLoggedIn: boolean;
 }
@@ -17,19 +18,32 @@ export function CardDetailModal({
   card,
   onClose,
   onUpdate,
+  onSaveSuccess,
   onDelete,
   isLoggedIn,
 }: CardDetailModalProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [editData, setEditData] = useState(card);
+  const [quantityInput, setQuantityInput] = useState(String(card.quantity));
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const pokemonCard = card.card;
+
+  const getNormalizedQuantity = () => {
+    const parsed = Number.parseInt(quantityInput, 10);
+    if (!Number.isFinite(parsed) || parsed < 1) return 1;
+    return parsed;
+  };
 
   const handleSave = async () => {
     setIsSaving(true);
     try {
-      await onUpdate(editData);
+      const normalizedQuantity = getNormalizedQuantity();
+      const payload = { ...editData, quantity: normalizedQuantity };
+      await onUpdate(payload);
+      onSaveSuccess?.(normalizedQuantity);
+      setEditData(payload);
+      setQuantityInput(String(normalizedQuantity));
       setIsEditing(false);
       onClose();
     } finally {
@@ -139,7 +153,10 @@ export function CardDetailModal({
                 {isLoggedIn && (
                   <div className="flex gap-3 mt-6">
                     <button
-                      onClick={() => setIsEditing(true)}
+                      onClick={() => {
+                        setQuantityInput(String(editData.quantity));
+                        setIsEditing(true);
+                      }}
                       className="flex-1 px-4 py-3 bg-accent text-accent-foreground rounded-lg
                                flex items-center justify-center gap-2 hover:scale-105
                                transition-transform duration-200"
@@ -175,12 +192,10 @@ export function CardDetailModal({
                     <input
                       type="number"
                       min="1"
-                      value={editData.quantity}
-                      onChange={(e) =>
-                        setEditData({
-                          ...editData,
-                          quantity: parseInt(e.target.value) || 1,
-                        })
+                      value={quantityInput}
+                      onChange={(e) => setQuantityInput(e.target.value)}
+                      onBlur={() =>
+                        setQuantityInput(String(getNormalizedQuantity()))
                       }
                       className="w-full px-4 py-2 bg-input-background border-2 border-border
                                rounded-lg focus:outline-none focus:border-primary"
@@ -193,6 +208,7 @@ export function CardDetailModal({
                   <button
                     onClick={() => {
                       setEditData(card);
+                      setQuantityInput(String(card.quantity));
                       setIsEditing(false);
                     }}
                     disabled={isSaving}
