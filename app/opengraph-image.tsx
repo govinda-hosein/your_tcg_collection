@@ -48,35 +48,6 @@ export default function OpenGraphImage() {
         <div
           style={{
             display: "flex",
-            alignItems: "center",
-            gap: 16,
-            fontSize: 26,
-            letterSpacing: 4,
-            textTransform: "uppercase",
-            color: "#6b3b1e",
-          }}
-        >
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              width: 56,
-              height: 56,
-              borderRadius: 16,
-              background: "rgba(255,255,255,0.55)",
-              border: "2px solid rgba(107, 59, 30, 0.16)",
-              fontSize: 30,
-            }}
-          >
-            T
-          </div>
-          Trading Card Collection
-        </div>
-
-        <div
-          style={{
-            display: "flex",
             flexDirection: "column",
             gap: 20,
             maxWidth: 900,
@@ -104,30 +75,6 @@ export default function OpenGraphImage() {
           >
             {description}
           </div>
-        </div>
-
-        <div style={{ display: "flex", gap: 16 }}>
-          {[
-            "Track owned cards",
-            "Filter by rarity",
-            "Search your collection",
-          ].map((label) => (
-            <div
-              key={label}
-              style={{
-                display: "flex",
-                alignItems: "center",
-                padding: "14px 20px",
-                borderRadius: 999,
-                background: "rgba(255,255,255,0.58)",
-                border: "2px solid rgba(107, 59, 30, 0.14)",
-                fontSize: 24,
-                color: "#6b3b1e",
-              }}
-            >
-              {label}
-            </div>
-          ))}
         </div>
       </div>
     </div>,
