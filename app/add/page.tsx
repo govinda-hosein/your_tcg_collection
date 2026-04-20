@@ -147,7 +147,7 @@ export default function AddCardPage() {
           {/* Decorative Header */}
           <div className="bg-linear-to-r from-primary via-secondary to-accent h-3" />
 
-          <div className="p-8">
+          <div className="p-4">
             <label className="block text-sm mb-2 font-medium">
               Search for a Card
             </label>
@@ -202,7 +202,7 @@ export default function AddCardPage() {
             {/* Decorative Header */}
             <div className="bg-linear-to-r from-accent to-primary h-3" />
 
-            <div className="p-8">
+            <div className="p-4">
               <h2
                 className="text-2xl mb-6"
                 style={{ fontFamily: "var(--font-display)" }}
@@ -211,7 +211,7 @@ export default function AddCardPage() {
               </h2>
 
               {/* Card Preview */}
-              <div className="bg-linear-to-br from-purple-100 to-pink-100 rounded-xl p-6 mb-6 border-2 border-border">
+              <div className="bg-linear-to-br from-purple-100 to-pink-100 rounded-xl p-2 mb-6 border-2 border-border">
                 <div className="flex items-center justify-between gap-6">
                   <button
                     type="button"
@@ -246,15 +246,6 @@ export default function AddCardPage() {
                       {selectedCard.rarity}
                     </div>
                   </div>
-                  {selectedCard.types && selectedCard.types.length > 0 && (
-                    <div className="text-5xl">
-                      {selectedCard.types[0] === "Fire" && "🔥"}
-                      {selectedCard.types[0] === "Water" && "💧"}
-                      {selectedCard.types[0] === "Electric" && "⚡"}
-                      {selectedCard.types[0] === "Grass" && "🌿"}
-                      {selectedCard.types[0] === "Psychic" && "🔮"}
-                    </div>
-                  )}
                 </div>
               </div>
 
