@@ -22,6 +22,10 @@ import Link from "next/link";
 
 type CollectionStatsResponse = {
   totalQuantity: number;
+  sets: Array<{
+    id: string;
+    name: string;
+  }>;
 };
 
 const CARDS_PER_PAGE = 12;
@@ -42,7 +46,10 @@ function HomeContent() {
     () => searchParams.get("search")?.trim() ?? "",
   );
   const [selectedRarity, setSelectedRarity] = useState("");
-  const [totalQuantity, setTotalQuantity] = useState(0);
+  const [stats, setStats] = useState<CollectionStatsResponse>({
+    totalQuantity: 0,
+    sets: [],
+  });
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const { toastMessage, showToast } = useToast(1700);
@@ -53,12 +60,9 @@ function HomeContent() {
   const rarityFromUrl = searchParams.get("rarity")?.trim() ?? "";
   const rawPageFromUrl = Number(searchParams.get("page") ?? "1");
 
-  const fetchCards = async (rarity?: string) => {
+  const fetchCards = async () => {
     const baseApiPath = withBasePath("/api/owned-cards");
-    const url = rarity
-      ? `${baseApiPath}?rarity=${encodeURIComponent(rarity)}`
-      : baseApiPath;
-    const response = await fetch(url, { cache: "no-store" });
+    const response = await fetch(baseApiPath, { cache: "no-store" });
     if (!response.ok) throw new Error("Failed to fetch owned cards");
     return (await response.json()) as OwnedCardViewModel[];
   };
@@ -78,16 +82,15 @@ function HomeContent() {
       try {
         const [session, data, stats] = await Promise.all([
           getSession(),
-          fetchCards(rarityFromUrl || undefined),
+          fetchCards(),
           fetchStats(),
         ]);
 
         if (!isMounted) return;
 
-        setSelectedRarity(rarityFromUrl);
         setIsLoggedIn(!!session?.user?.email);
         setCards(data);
-        setTotalQuantity(stats.totalQuantity);
+        setStats(stats);
       } catch (error) {
         console.error("Error loading data:", error);
       } finally {
@@ -100,6 +103,10 @@ function HomeContent() {
     return () => {
       isMounted = false;
     };
+  }, []);
+
+  useEffect(() => {
+    setSelectedRarity(rarityFromUrl);
   }, [rarityFromUrl]);
 
   const handleSearchChange = (query: string) => {
@@ -157,16 +164,16 @@ function HomeContent() {
     router.replace(query ? `${pathname}?${query}` : pathname, {
       scroll: false,
     });
-
-    try {
-      const data = await fetchCards(rarity || undefined);
-      setCards(data);
-    } catch (error) {
-      console.error("Error filtering by rarity:", error);
-    }
   };
 
   const filteredCards = cards.filter((card) => {
+    if (
+      selectedRarity &&
+      card.card.rarity?.toLowerCase() !== selectedRarity.toLowerCase()
+    ) {
+      return false;
+    }
+
     if (!searchQuery) return true;
     const cardName = card.card?.name?.toLowerCase() ?? "";
     const setName = card.card?.set?.name?.toLowerCase() ?? "";
@@ -391,7 +398,7 @@ function HomeContent() {
           onDelete={handleDeleteCard}
           onUpdate={handleUpdateCard}
           isLoggedIn={isLoggedIn}
-          totalQuantity={totalQuantity}
+          totalQuantity={stats.totalQuantity}
           onBasketAdd={({ cardName, addedQuantity, inBasketQuantity }) => {
             if (addedQuantity > 0) {
               const quantityLabel =

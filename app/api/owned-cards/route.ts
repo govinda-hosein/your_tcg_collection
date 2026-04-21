@@ -1,11 +1,9 @@
 import { OwnedCard } from "@/database";
 import type { OwnedCardViewModel } from "@/database/ownedCard.model";
 import connectDB from "@/lib/mongodb";
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 
-export async function GET(request: NextRequest) {
-  const rarity = request.nextUrl.searchParams.get("rarity")?.trim() || null;
-
+export async function GET() {
   try {
     await connectDB();
     const ownedCards = await OwnedCard.find()
@@ -19,11 +17,6 @@ export async function GET(request: NextRequest) {
       .lean<OwnedCardViewModel[]>();
 
     const response: OwnedCardViewModel[] = ownedCards
-      .filter((ownedCard) =>
-        rarity
-          ? ownedCard.card.rarity?.toLowerCase() === rarity.toLowerCase()
-          : true,
-      )
       .map<OwnedCardViewModel>((ownedCard) => ({
         cardId: ownedCard.cardId,
         card: {
