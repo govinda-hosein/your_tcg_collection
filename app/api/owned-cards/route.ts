@@ -23,7 +23,6 @@ export async function GET() {
           id: ownedCard.card.id,
           name: ownedCard.card.name,
           number: ownedCard.card.number,
-          regulationMark: ownedCard.card.regulationMark,
           rarity: ownedCard.card.rarity,
           types: ownedCard.card.types,
           images: ownedCard.card.images,
