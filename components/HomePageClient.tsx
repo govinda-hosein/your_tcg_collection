@@ -15,6 +15,7 @@ import { AppToast } from "@/components/AppToast";
 import { CardGrid } from "@/components/CardGrid";
 import { RaritySelect } from "@/components/RaritySelect";
 import { SearchBar } from "@/components/SearchBar";
+import { SetSelect } from "@/components/SetSelect";
 import type { OwnedCardViewModel } from "@/database/ownedCard.model";
 import { useToast } from "@/hooks/useToast";
 import { withBasePath } from "@/lib/url";
@@ -46,6 +47,7 @@ function HomeContent() {
     () => searchParams.get("search")?.trim() ?? "",
   );
   const [selectedRarity, setSelectedRarity] = useState("");
+  const [selectedSetId, setSelectedSetId] = useState("");
   const [stats, setStats] = useState<CollectionStatsResponse>({
     totalQuantity: 0,
     sets: [],
@@ -58,6 +60,7 @@ function HomeContent() {
   const previousSearchQueryRef = useRef(searchQuery);
 
   const rarityFromUrl = searchParams.get("rarity")?.trim() ?? "";
+  const setFromUrl = searchParams.get("set")?.trim() ?? "";
   const rawPageFromUrl = Number(searchParams.get("page") ?? "1");
 
   const fetchCards = async () => {
@@ -108,6 +111,10 @@ function HomeContent() {
   useEffect(() => {
     setSelectedRarity(rarityFromUrl);
   }, [rarityFromUrl]);
+
+  useEffect(() => {
+    setSelectedSetId(setFromUrl);
+  }, [setFromUrl]);
 
   const handleSearchChange = (query: string) => {
     setSearchQuery(query);
@@ -166,12 +173,42 @@ function HomeContent() {
     });
   };
 
+  const handleSetChange = async (setId: string) => {
+    setSelectedSetId(setId);
+    setSearchQuery("");
+
+    const nextParams = new URLSearchParams(searchParams.toString());
+    if (setId) {
+      nextParams.set("set", setId);
+    } else {
+      nextParams.delete("set");
+    }
+    nextParams.delete("search");
+    nextParams.delete("page");
+
+    const query = nextParams.toString();
+    router.replace(query ? `${pathname}?${query}` : pathname, {
+      scroll: false,
+    });
+  };
+
+  const selectedSetName =
+    stats.sets.find((set) => set.id === selectedSetId)?.name.toLowerCase() ??
+    "";
+
   const filteredCards = cards.filter((card) => {
     if (
       selectedRarity &&
       card.card.rarity?.toLowerCase() !== selectedRarity.toLowerCase()
     ) {
       return false;
+    }
+
+    if (selectedSetId) {
+      const cardSetName = card.card.set?.name?.toLowerCase() ?? "";
+      if (!selectedSetName || cardSetName !== selectedSetName) {
+        return false;
+      }
     }
 
     if (!searchQuery) return true;
@@ -360,6 +397,11 @@ function HomeContent() {
             <RaritySelect
               value={selectedRarity}
               onChange={handleRarityChange}
+            />
+            <SetSelect
+              value={selectedSetId}
+              sets={stats.sets}
+              onChange={handleSetChange}
             />
           </div>
 
