@@ -29,14 +29,8 @@ function toCardSeedInput(
   item: RawCardInput,
   setId: string,
 ): CardSeedInput | null {
-  const legalities = item.legalities as Record<string, unknown> | undefined;
   const images = item.images as Record<string, unknown> | undefined;
   const types = item.types as unknown;
-
-  // Keep the same legality filter: only cards with legalities.standard.
-  if (legalities?.standard === undefined) {
-    return null;
-  }
 
   // Keep only rows that satisfy required PokemonCard model fields.
   if (
