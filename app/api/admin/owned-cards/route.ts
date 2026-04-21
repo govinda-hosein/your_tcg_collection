@@ -4,10 +4,6 @@ import { NextRequest, NextResponse } from "next/server";
 import type { OwnedCardViewModel } from "@/database/ownedCard.model";
 import connectDB from "@/lib/mongodb";
 
-type PopulatedOwnedCard = OwnedCardViewModel & {
-  card: NonNullable<OwnedCardViewModel["card"]>;
-};
-
 interface CreateOwnedCardBody {
   cardId?: string;
   quantity?: number;
@@ -18,9 +14,23 @@ interface UpdateOwnedCardBody {
   quantity?: number;
 }
 
-function toOwnedCardViewModel(
-  ownedCard: PopulatedOwnedCard,
-): OwnedCardViewModel {
+async function findOwnedCardViewModel(
+  cardId: string,
+): Promise<OwnedCardViewModel | null> {
+  const ownedCard = await OwnedCard.findOne({ cardId })
+    .populate({
+      path: "card",
+      populate: {
+        path: "set",
+        select: "name",
+      },
+    })
+    .lean<OwnedCardViewModel | null>();
+
+  if (!ownedCard) {
+    return null;
+  }
+
   return {
     cardId: ownedCard.cardId,
     card: {
@@ -35,29 +45,8 @@ function toOwnedCardViewModel(
         name: ownedCard.card.set?.name ?? "Unknown Set",
       },
     },
-    condition: "Near Mint",
     quantity: ownedCard.quantity,
   };
-}
-
-async function findOwnedCardViewModel(
-  cardId: string,
-): Promise<OwnedCardViewModel | null> {
-  const ownedCard = await OwnedCard.findOne({ cardId })
-    .populate({
-      path: "card",
-      populate: {
-        path: "set",
-        select: "name",
-      },
-    })
-    .lean<PopulatedOwnedCard | null>();
-
-  if (!ownedCard || !ownedCard.card) {
-    return null;
-  }
-
-  return toOwnedCardViewModel(ownedCard);
 }
 
 export async function POST(request: NextRequest) {

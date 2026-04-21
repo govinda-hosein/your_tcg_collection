@@ -9,10 +9,6 @@ type SearchParams = {
   rarity?: string | string[];
 };
 
-type PopulatedOwnedCard = OwnedCardViewModel & {
-  card: NonNullable<OwnedCardViewModel["card"]>;
-};
-
 const siteTitle = process.env.NEXT_PUBLIC_SITE_TITLE || "Your TCG Collection";
 const basePath = (process.env.NEXT_PUBLIC_BASE_PATH || "").replace(/\/$/, "");
 const fallbackOgImagePath = `${basePath}/opengraph-image`;
@@ -68,10 +64,9 @@ export async function generateMetadata({
           select: "name",
         },
       })
-      .lean<PopulatedOwnedCard[]>();
+      .lean<OwnedCardViewModel[]>();
 
     const firstMatch = ownedCards
-      .filter((ownedCard) => ownedCard.card)
       .filter((ownedCard) =>
         rarity
           ? ownedCard.card.rarity?.toLowerCase() === rarity.toLowerCase()
