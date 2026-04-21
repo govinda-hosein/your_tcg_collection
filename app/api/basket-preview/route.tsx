@@ -1,5 +1,3 @@
-/* eslint-disable @next/next/no-img-element */
-
 import { OwnedCard } from "@/database";
 import type { OwnedCardViewModel } from "@/database/ownedCard.model";
 import { decodeBasketParam } from "@/lib/basket";
@@ -49,13 +47,11 @@ export async function GET(request: NextRequest) {
         .filter((card): card is { name: string; image: string } =>
           Boolean(card?.image),
         )
-        .slice(0, 3);
+        .slice(0, 2);
     } catch (error) {
       console.error("Failed to build basket preview image:", error);
     }
   }
-
-  const remainingCards = Math.max(0, distinctCards - previewCards.length);
 
   return new ImageResponse(
     <div
@@ -149,26 +145,6 @@ export async function GET(request: NextRequest) {
               />
             </div>
           ))}
-        {remainingCards > 0 && (
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              width: 220,
-              height: 330,
-              borderRadius: 18,
-              border: "3px dashed rgba(31, 20, 13, 0.32)",
-              background: "rgba(255,255,255,0.24)",
-              color: "#4b2a16",
-              fontSize: 44,
-              fontWeight: 800,
-              lineHeight: 1,
-            }}
-          >
-            +{remainingCards} more
-          </div>
-        )}
       </div>
     </div>,
     {
