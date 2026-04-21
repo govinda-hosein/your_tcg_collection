@@ -2,6 +2,7 @@ export type BasketItem = {
   cardId: string;
   cardName: string;
   cardImage?: string;
+  cardImageLarge?: string;
   setName?: string;
   rarity?: string;
   quantity: number;

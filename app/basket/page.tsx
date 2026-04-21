@@ -8,6 +8,7 @@ import {
   Share2,
   ShoppingBasket,
   Trash2,
+  X,
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
@@ -42,6 +43,30 @@ export default function BasketPage() {
   >(null);
   const [isLoadingShared, setIsLoadingShared] = useState(false);
   const [animatingButton, setAnimatingButton] = useState<string | null>(null);
+  const [selectedImageUrl, setSelectedImageUrl] = useState<string | null>(null);
+
+  const openImageModal = async (item: BasketItem) => {
+    // If we already have the large image, use it
+    if (item.cardImageLarge) {
+      setSelectedImageUrl(item.cardImageLarge);
+      return;
+    }
+
+    // Otherwise, fetch the card to get the large image
+    try {
+      const response = await fetch(`${BASE_PATH}/api/owned-cards`);
+      if (!response.ok) return;
+      const allCards = (await response.json()) as OwnedCardViewModel[];
+      const card = allCards.find((c) => c.cardId === item.cardId);
+      if (card?.card.images?.large) {
+        setSelectedImageUrl(card.card.images.large);
+      } else {
+        setSelectedImageUrl(item.cardImage ?? null);
+      }
+    } catch {
+      setSelectedImageUrl(item.cardImage ?? null);
+    }
+  };
 
   const animateButton = (buttonId: string) => {
     setAnimatingButton(buttonId);
@@ -76,6 +101,7 @@ export default function BasketPage() {
                 cardId: owned.cardId,
                 cardName: owned.card.name,
                 cardImage: owned.card.images?.small ?? "",
+                cardImageLarge: owned.card.images?.large ?? "",
                 setName: owned.card.set?.name ?? "",
                 rarity: owned.card.rarity ?? "",
                 quantity: clampedQty,
@@ -306,12 +332,18 @@ export default function BasketPage() {
                     <div className="grid grid-cols-[80px_1fr] gap-3 items-stretch">
                       <div className="relative w-20 min-h-28 self-stretch overflow-hidden rounded-md border border-border bg-card/60">
                         {item.cardImage ? (
-                          <Image
-                            src={item.cardImage}
-                            alt={item.cardName}
-                            fill
-                            className="object-contain"
-                          />
+                          <button
+                            type="button"
+                            onClick={() => openImageModal(item)}
+                            className="h-full w-full hover:opacity-75 transition-opacity"
+                          >
+                            <Image
+                              src={item.cardImage}
+                              alt={item.cardName}
+                              fill
+                              className="object-contain"
+                            />
+                          </button>
                         ) : (
                           <div className="flex h-full w-full items-center justify-center text-[10px] text-muted-foreground">
                             No Img
@@ -383,6 +415,33 @@ export default function BasketPage() {
           </div>
         </section>
       </div>
+
+      {selectedImageUrl && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center p-3 md:p-6 bg-black/70 backdrop-blur-md"
+          onClick={() => setSelectedImageUrl(null)}
+        >
+          <div className="relative max-w-4xl w-full max-h-[90vh]">
+            <button
+              type="button"
+              onClick={() => setSelectedImageUrl(null)}
+              className="absolute top-4 right-4 z-10 p-2 bg-black/50 hover:bg-black/70 rounded-lg transition-colors"
+              aria-label="Close modal"
+            >
+              <X className="h-6 w-6 text-white" />
+            </button>
+            <div className="h-[70vh] relative bg-black/5 flex items-center justify-center rounded-lg overflow-hidden">
+              <Image
+                src={selectedImageUrl}
+                alt="Card preview"
+                fill
+                sizes="(max-width: 768px) 100vw, 80vw"
+                className="object-contain p-4 md:p-6"
+              />
+            </div>
+          </div>
+        </div>
+      )}
 
       <AppToast message={toastMessage} variant="success" />
     </div>
