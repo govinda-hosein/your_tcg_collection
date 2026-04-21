@@ -5,27 +5,145 @@ import {
   Copy,
   Minus,
   Plus,
+  Share2,
   ShoppingBasket,
   Trash2,
+  X,
 } from "lucide-react";
-
-import { AppToast } from "@/components/AppToast";
-import { useBasket } from "@/hooks/useBasket";
-import { useToast } from "@/hooks/useToast";
-import { RARITY_COLORS } from "@/lib/constants";
 import Image from "next/image";
 import Link from "next/link";
+import { useRouter, useSearchParams } from "next/navigation";
+import { useEffect, useState } from "react";
+
+import { AppToast } from "@/components/AppToast";
+import type { OwnedCardViewModel } from "@/database/ownedCard.model";
+import { useBasket } from "@/hooks/useBasket";
+import { useToast } from "@/hooks/useToast";
+import { BasketItem, decodeBasketParam, encodeBasketToUrl } from "@/lib/basket";
+import { RARITY_COLORS } from "@/lib/constants";
+
+const BASE_PATH = process.env.NEXT_PUBLIC_BASE_PATH ?? "";
 
 export default function BasketPage() {
-  const { items, isHydrated, totals, changeQuantity, removeItem, clearBasket } =
-    useBasket();
+  const {
+    items,
+    isHydrated,
+    totals,
+    changeQuantity,
+    removeItem,
+    clearBasket,
+    setItems,
+  } = useBasket();
   const { toastMessage, showToast } = useToast(1700);
+  const searchParams = useSearchParams();
+  const router = useRouter();
+
+  const [sharedBasketItems, setSharedBasketItems] = useState<
+    BasketItem[] | null
+  >(null);
+  const [isLoadingShared, setIsLoadingShared] = useState(false);
+  const [animatingButton, setAnimatingButton] = useState<string | null>(null);
+  const [selectedImageUrl, setSelectedImageUrl] = useState<string | null>(null);
+
+  const openImageModal = async (item: BasketItem) => {
+    // If we already have the large image, use it
+    if (item.cardImageLarge) {
+      setSelectedImageUrl(item.cardImageLarge);
+      return;
+    }
+
+    // Otherwise, fetch the card to get the large image
+    try {
+      const response = await fetch(`${BASE_PATH}/api/owned-cards`);
+      if (!response.ok) return;
+      const allCards = (await response.json()) as OwnedCardViewModel[];
+      const card = allCards.find((c) => c.cardId === item.cardId);
+      if (card?.card.images?.large) {
+        setSelectedImageUrl(card.card.images.large);
+      } else {
+        setSelectedImageUrl(item.cardImage ?? null);
+      }
+    } catch {
+      setSelectedImageUrl(item.cardImage ?? null);
+    }
+  };
+
+  const animateButton = (buttonId: string) => {
+    setAnimatingButton(buttonId);
+    setTimeout(() => setAnimatingButton(null), 200);
+  };
+
+  // On mount: detect ?basket= param, resolve card details, and prompt the user
+  useEffect(() => {
+    const basketParam = searchParams.get("basket");
+    if (!basketParam) return;
+
+    // Remove the param from the URL immediately so refreshes don't re-trigger
+    router.replace("/basket", { scroll: false });
+
+    const decoded = decodeBasketParam(basketParam);
+    if (decoded.length === 0) return;
+
+    setIsLoadingShared(true);
+    fetch(`${BASE_PATH}/api/owned-cards`)
+      .then((res) => {
+        if (!res.ok) throw new Error(`API error ${res.status}`);
+        return res.json();
+      })
+      .then((ownedCards: OwnedCardViewModel[]) => {
+        const resolved: BasketItem[] = decoded.flatMap(
+          ({ cardId, quantity }) => {
+            const owned = ownedCards.find((c) => c.cardId === cardId);
+            if (!owned) return [];
+            const clampedQty = Math.min(quantity, owned.quantity);
+            return [
+              {
+                cardId: owned.cardId,
+                cardName: owned.card.name,
+                cardImage: owned.card.images?.small ?? "",
+                cardImageLarge: owned.card.images?.large ?? "",
+                setName: owned.card.set?.name ?? "",
+                rarity: owned.card.rarity ?? "",
+                quantity: clampedQty,
+                maxQuantity: owned.quantity,
+              },
+            ];
+          },
+        );
+        if (resolved.length > 0) {
+          setSharedBasketItems(resolved);
+        }
+      })
+      .catch((err) => {
+        console.error("Failed to load shared basket:", err);
+        showToast("Failed to load shared basket");
+      })
+      .finally(() => setIsLoadingShared(false));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const handleShareBasket = async () => {
+    if (items.length === 0) {
+      showToast("Your basket is empty");
+      return;
+    }
+    animateButton("share");
+    const encoded = encodeBasketToUrl(items);
+    const url = `${window.location.origin}${BASE_PATH}/basket?basket=${encoded}`;
+    try {
+      await navigator.clipboard.writeText(url);
+      showToast("Share link copied!");
+    } catch {
+      showToast("Failed to copy share link");
+    }
+  };
 
   const handleCopyToClipboard = async () => {
     if (items.length === 0) {
       showToast("Your basket is empty");
       return;
     }
+    animateButton("copy");
 
     const clipboardText = items
       .map(
@@ -82,10 +200,55 @@ export default function BasketPage() {
           </div>
         </div>
 
+        {isLoadingShared && (
+          <div className="mb-4 rounded-xl border-2 border-accent/40 bg-accent/10 p-4 text-sm text-muted-foreground">
+            Loading shared basket&hellip;
+          </div>
+        )}
+
+        {sharedBasketItems && (
+          <div className="mb-4 rounded-xl border-2 border-accent/40 bg-accent/10 p-4">
+            <p className="font-medium mb-1">
+              A shared basket with{" "}
+              <span
+                className="text-accent"
+                style={{ fontFamily: "var(--font-display)" }}
+              >
+                {sharedBasketItems.length} card
+                {sharedBasketItems.length !== 1 ? "s" : ""}
+              </span>{" "}
+              was found in this link.
+            </p>
+            <p className="text-sm text-muted-foreground mb-3">
+              This will replace your current basket.
+            </p>
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={() => {
+                  setItems(sharedBasketItems);
+                  setSharedBasketItems(null);
+                  showToast("Basket replaced with shared basket");
+                }}
+                className="rounded-lg bg-accent px-4 py-2 text-sm font-medium text-white hover:opacity-90 transition-opacity"
+              >
+                Yes, replace
+              </button>
+              <button
+                type="button"
+                onClick={() => setSharedBasketItems(null)}
+                className="rounded-lg border border-border px-4 py-2 text-sm hover:bg-muted transition-colors"
+              >
+                Dismiss
+              </button>
+            </div>
+          </div>
+        )}
+
         <section className="max-w-175 bg-card border-4 border-border rounded-2xl shadow-xl overflow-hidden">
           <div className="h-3 bg-linear-to-r from-accent to-primary" />
           <div className="p-5 sm:p-6">
-            <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div className="mb-4 flex flex-col gap-3">
               <div className="flex items-center gap-3">
                 <h2
                   className="text-xl"
@@ -108,9 +271,23 @@ export default function BasketPage() {
               <div className="flex items-center gap-2">
                 <button
                   type="button"
+                  onClick={handleShareBasket}
+                  disabled={items.length === 0}
+                  className={`inline-flex items-center gap-2 rounded-lg border border-border px-3 py-2 text-sm hover:bg-muted disabled:opacity-50 disabled:hover:bg-transparent transition-transform ${
+                    animatingButton === "share" ? "scale-110" : ""
+                  }`}
+                >
+                  <Share2 className="h-4 w-4" />
+                  Share Link
+                </button>
+
+                <button
+                  type="button"
                   onClick={handleCopyToClipboard}
                   disabled={items.length === 0}
-                  className="inline-flex items-center gap-2 rounded-lg border border-border px-3 py-2 text-sm hover:bg-muted disabled:opacity-50 disabled:hover:bg-transparent"
+                  className={`inline-flex items-center gap-2 rounded-lg border border-border px-3 py-2 text-sm hover:bg-muted disabled:opacity-50 disabled:hover:bg-transparent transition-transform ${
+                    animatingButton === "copy" ? "scale-110" : ""
+                  }`}
                 >
                   <Copy className="h-4 w-4" />
                   Copy to Clipboard
@@ -118,9 +295,14 @@ export default function BasketPage() {
 
                 <button
                   type="button"
-                  onClick={clearBasket}
+                  onClick={() => {
+                    animateButton("clear");
+                    clearBasket();
+                  }}
                   disabled={items.length === 0}
-                  className="inline-flex items-center gap-2 rounded-lg border border-border px-3 py-2 text-sm hover:bg-muted disabled:opacity-50 disabled:hover:bg-transparent"
+                  className={`inline-flex items-center gap-2 rounded-lg border border-border px-3 py-2 text-sm hover:bg-muted disabled:opacity-50 disabled:hover:bg-transparent transition-transform ${
+                    animatingButton === "clear" ? "scale-110" : ""
+                  }`}
                 >
                   <Trash2 className="h-4 w-4" />
                   Clear
@@ -150,12 +332,18 @@ export default function BasketPage() {
                     <div className="grid grid-cols-[80px_1fr] gap-3 items-stretch">
                       <div className="relative w-20 min-h-28 self-stretch overflow-hidden rounded-md border border-border bg-card/60">
                         {item.cardImage ? (
-                          <Image
-                            src={item.cardImage}
-                            alt={item.cardName}
-                            fill
-                            className="object-contain"
-                          />
+                          <button
+                            type="button"
+                            onClick={() => openImageModal(item)}
+                            className="h-full w-full hover:opacity-75 transition-opacity"
+                          >
+                            <Image
+                              src={item.cardImage}
+                              alt={item.cardName}
+                              fill
+                              className="object-contain"
+                            />
+                          </button>
                         ) : (
                           <div className="flex h-full w-full items-center justify-center text-[10px] text-muted-foreground">
                             No Img
@@ -227,6 +415,33 @@ export default function BasketPage() {
           </div>
         </section>
       </div>
+
+      {selectedImageUrl && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center p-3 md:p-6 bg-black/70 backdrop-blur-md"
+          onClick={() => setSelectedImageUrl(null)}
+        >
+          <div className="relative max-w-4xl w-full max-h-[90vh]">
+            <button
+              type="button"
+              onClick={() => setSelectedImageUrl(null)}
+              className="absolute top-4 right-4 z-10 p-2 bg-black/50 hover:bg-black/70 rounded-lg transition-colors"
+              aria-label="Close modal"
+            >
+              <X className="h-6 w-6 text-white" />
+            </button>
+            <div className="h-[70vh] relative bg-black/5 flex items-center justify-center rounded-lg overflow-hidden">
+              <Image
+                src={selectedImageUrl}
+                alt="Card preview"
+                fill
+                sizes="(max-width: 768px) 100vw, 80vw"
+                className="object-contain p-4 md:p-6"
+              />
+            </div>
+          </div>
+        </div>
+      )}
 
       <AppToast message={toastMessage} variant="success" />
     </div>
