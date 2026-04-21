@@ -42,7 +42,7 @@ export default function AddCardPage() {
     setIsSearching(true);
     try {
       const response = await fetch(
-        `${withBasePath("/api/pokemon-cards")}?name=${encodeURIComponent(query)}&limit=25`,
+        `${withBasePath("/api/pokemon-cards")}?name=${encodeURIComponent(query)}`,
       );
 
       if (!response.ok) {

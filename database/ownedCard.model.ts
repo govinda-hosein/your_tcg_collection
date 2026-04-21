@@ -24,22 +24,14 @@ ownedCardSchema.virtual("card", {
 
 export type OwnedCardDocument = InferSchemaType<typeof ownedCardSchema>;
 export type OwnedCardModelType = Model<OwnedCardDocument>;
-export type CardCondition =
-  | "Mint"
-  | "Near Mint"
-  | "Excellent"
-  | "Good"
-  | "Played"
-  | "Poor";
 
 export type OwnedCardViewModel = Pick<
   OwnedCardDocument,
   "cardId" | "quantity"
 > & {
-  condition: CardCondition;
-  card?: Pick<
+  card: Pick<
     PokemonCardDocument,
-    "id" | "name" | "number" | "regulationMark" | "rarity" | "types" | "images"
+    "id" | "name" | "number" | "rarity" | "types" | "images"
   > & {
     set?: Pick<SetDocument, "name">;
   };

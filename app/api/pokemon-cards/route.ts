@@ -1,6 +1,6 @@
+import { PokemonCard, Set } from "@/database";
 import { NextRequest, NextResponse } from "next/server";
 
-import { PokemonCard, Set } from "@/database";
 import connectDB from "@/lib/mongodb";
 
 function escapeRegex(value: string): string {
@@ -18,7 +18,7 @@ export async function GET(request: NextRequest) {
     const limit =
       Number.isFinite(limitParam) && limitParam > 0
         ? Math.min(limitParam, 100)
-        : 25;
+        : 100;
 
     if (id.length > 0) {
       const cardResults = await PokemonCard.aggregate([
@@ -124,7 +124,6 @@ export async function GET(request: NextRequest) {
         },
       },
     ]);
-
     return NextResponse.json(cards, { status: 200 });
   } catch (error) {
     console.error(error);

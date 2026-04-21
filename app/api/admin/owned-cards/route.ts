@@ -4,10 +4,6 @@ import { NextRequest, NextResponse } from "next/server";
 import type { OwnedCardViewModel } from "@/database/ownedCard.model";
 import connectDB from "@/lib/mongodb";
 
-type PopulatedOwnedCard = OwnedCardViewModel & {
-  card: NonNullable<OwnedCardViewModel["card"]>;
-};
-
 interface CreateOwnedCardBody {
   cardId?: string;
   quantity?: number;
@@ -16,28 +12,6 @@ interface CreateOwnedCardBody {
 interface UpdateOwnedCardBody {
   cardId?: string;
   quantity?: number;
-}
-
-function toOwnedCardViewModel(
-  ownedCard: PopulatedOwnedCard,
-): OwnedCardViewModel {
-  return {
-    cardId: ownedCard.cardId,
-    card: {
-      id: ownedCard.card.id,
-      name: ownedCard.card.name,
-      number: ownedCard.card.number,
-      regulationMark: ownedCard.card.regulationMark,
-      rarity: ownedCard.card.rarity,
-      types: ownedCard.card.types,
-      images: ownedCard.card.images,
-      set: {
-        name: ownedCard.card.set?.name ?? "Unknown Set",
-      },
-    },
-    condition: "Near Mint",
-    quantity: ownedCard.quantity,
-  };
 }
 
 async function findOwnedCardViewModel(
@@ -51,13 +25,27 @@ async function findOwnedCardViewModel(
         select: "name",
       },
     })
-    .lean<PopulatedOwnedCard | null>();
+    .lean<OwnedCardViewModel | null>();
 
-  if (!ownedCard || !ownedCard.card) {
+  if (!ownedCard) {
     return null;
   }
 
-  return toOwnedCardViewModel(ownedCard);
+  return {
+    cardId: ownedCard.cardId,
+    card: {
+      id: ownedCard.card.id,
+      name: ownedCard.card.name,
+      number: ownedCard.card.number,
+      rarity: ownedCard.card.rarity,
+      types: ownedCard.card.types,
+      images: ownedCard.card.images,
+      set: {
+        name: ownedCard.card.set?.name ?? "Unknown Set",
+      },
+    },
+    quantity: ownedCard.quantity,
+  };
 }
 
 export async function POST(request: NextRequest) {
