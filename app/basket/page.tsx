@@ -41,6 +41,12 @@ export default function BasketPage() {
     BasketItem[] | null
   >(null);
   const [isLoadingShared, setIsLoadingShared] = useState(false);
+  const [animatingButton, setAnimatingButton] = useState<string | null>(null);
+
+  const animateButton = (buttonId: string) => {
+    setAnimatingButton(buttonId);
+    setTimeout(() => setAnimatingButton(null), 200);
+  };
 
   // On mount: detect ?basket= param, resolve card details, and prompt the user
   useEffect(() => {
@@ -95,6 +101,7 @@ export default function BasketPage() {
       showToast("Your basket is empty");
       return;
     }
+    animateButton("share");
     const encoded = encodeBasketToUrl(items);
     const url = `${window.location.origin}${BASE_PATH}/basket?basket=${encoded}`;
     try {
@@ -110,6 +117,7 @@ export default function BasketPage() {
       showToast("Your basket is empty");
       return;
     }
+    animateButton("copy");
 
     const clipboardText = items
       .map(
@@ -239,7 +247,9 @@ export default function BasketPage() {
                   type="button"
                   onClick={handleShareBasket}
                   disabled={items.length === 0}
-                  className="inline-flex items-center gap-2 rounded-lg border border-border px-3 py-2 text-sm hover:bg-muted disabled:opacity-50 disabled:hover:bg-transparent"
+                  className={`inline-flex items-center gap-2 rounded-lg border border-border px-3 py-2 text-sm hover:bg-muted disabled:opacity-50 disabled:hover:bg-transparent transition-transform ${
+                    animatingButton === "share" ? "scale-110" : ""
+                  }`}
                 >
                   <Share2 className="h-4 w-4" />
                   Share Link
@@ -249,7 +259,9 @@ export default function BasketPage() {
                   type="button"
                   onClick={handleCopyToClipboard}
                   disabled={items.length === 0}
-                  className="inline-flex items-center gap-2 rounded-lg border border-border px-3 py-2 text-sm hover:bg-muted disabled:opacity-50 disabled:hover:bg-transparent"
+                  className={`inline-flex items-center gap-2 rounded-lg border border-border px-3 py-2 text-sm hover:bg-muted disabled:opacity-50 disabled:hover:bg-transparent transition-transform ${
+                    animatingButton === "copy" ? "scale-110" : ""
+                  }`}
                 >
                   <Copy className="h-4 w-4" />
                   Copy to Clipboard
@@ -257,9 +269,14 @@ export default function BasketPage() {
 
                 <button
                   type="button"
-                  onClick={clearBasket}
+                  onClick={() => {
+                    animateButton("clear");
+                    clearBasket();
+                  }}
                   disabled={items.length === 0}
-                  className="inline-flex items-center gap-2 rounded-lg border border-border px-3 py-2 text-sm hover:bg-muted disabled:opacity-50 disabled:hover:bg-transparent"
+                  className={`inline-flex items-center gap-2 rounded-lg border border-border px-3 py-2 text-sm hover:bg-muted disabled:opacity-50 disabled:hover:bg-transparent transition-transform ${
+                    animatingButton === "clear" ? "scale-110" : ""
+                  }`}
                 >
                   <Trash2 className="h-4 w-4" />
                   Clear
