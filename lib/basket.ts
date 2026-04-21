@@ -154,3 +154,29 @@ export function addBasketItem(
     },
   ];
 }
+
+/**
+ * Encodes basket items into a compact URL-safe string: "cardId:qty,cardId:qty,..."
+ * Only cardId and quantity are encoded; card details are resolved from the API on the receiving end.
+ */
+export function encodeBasketToUrl(items: BasketItem[]): string {
+  return items.map((item) => `${item.cardId}:${item.quantity}`).join(",");
+}
+
+/**
+ * Decodes a basket URL param (produced by encodeBasketToUrl) back into cardId/quantity pairs.
+ * Uses lastIndexOf to safely handle cardIds that could contain colons.
+ */
+export function decodeBasketParam(
+  param: string,
+): Array<{ cardId: string; quantity: number }> {
+  if (!param) return [];
+  return param.split(",").flatMap((segment) => {
+    const lastColon = segment.lastIndexOf(":");
+    if (lastColon === -1) return [];
+    const cardId = segment.slice(0, lastColon).trim();
+    const quantity = parseInt(segment.slice(lastColon + 1), 10);
+    if (!cardId || !Number.isFinite(quantity) || quantity < 1) return [];
+    return [{ cardId, quantity: Math.floor(quantity) }];
+  });
+}

@@ -5,21 +5,105 @@ import {
   Copy,
   Minus,
   Plus,
+  Share2,
   ShoppingBasket,
   Trash2,
 } from "lucide-react";
-
-import { AppToast } from "@/components/AppToast";
-import { useBasket } from "@/hooks/useBasket";
-import { useToast } from "@/hooks/useToast";
-import { RARITY_COLORS } from "@/lib/constants";
 import Image from "next/image";
 import Link from "next/link";
+import { useRouter, useSearchParams } from "next/navigation";
+import { useEffect, useState } from "react";
+
+import { AppToast } from "@/components/AppToast";
+import type { OwnedCardViewModel } from "@/database/ownedCard.model";
+import { useBasket } from "@/hooks/useBasket";
+import { useToast } from "@/hooks/useToast";
+import { BasketItem, decodeBasketParam, encodeBasketToUrl } from "@/lib/basket";
+import { RARITY_COLORS } from "@/lib/constants";
+
+const BASE_PATH = process.env.NEXT_PUBLIC_BASE_PATH ?? "";
 
 export default function BasketPage() {
-  const { items, isHydrated, totals, changeQuantity, removeItem, clearBasket } =
-    useBasket();
+  const {
+    items,
+    isHydrated,
+    totals,
+    changeQuantity,
+    removeItem,
+    clearBasket,
+    setItems,
+  } = useBasket();
   const { toastMessage, showToast } = useToast(1700);
+  const searchParams = useSearchParams();
+  const router = useRouter();
+
+  const [sharedBasketItems, setSharedBasketItems] = useState<
+    BasketItem[] | null
+  >(null);
+  const [isLoadingShared, setIsLoadingShared] = useState(false);
+
+  // On mount: detect ?basket= param, resolve card details, and prompt the user
+  useEffect(() => {
+    const basketParam = searchParams.get("basket");
+    if (!basketParam) return;
+
+    // Remove the param from the URL immediately so refreshes don't re-trigger
+    router.replace("/basket", { scroll: false });
+
+    const decoded = decodeBasketParam(basketParam);
+    if (decoded.length === 0) return;
+
+    setIsLoadingShared(true);
+    fetch(`${BASE_PATH}/api/owned-cards`)
+      .then((res) => {
+        if (!res.ok) throw new Error(`API error ${res.status}`);
+        return res.json();
+      })
+      .then((ownedCards: OwnedCardViewModel[]) => {
+        const resolved: BasketItem[] = decoded.flatMap(
+          ({ cardId, quantity }) => {
+            const owned = ownedCards.find((c) => c.cardId === cardId);
+            if (!owned) return [];
+            const clampedQty = Math.min(quantity, owned.quantity);
+            return [
+              {
+                cardId: owned.cardId,
+                cardName: owned.card.name,
+                cardImage: owned.card.images?.small ?? "",
+                setName: owned.card.set?.name ?? "",
+                rarity: owned.card.rarity ?? "",
+                quantity: clampedQty,
+                maxQuantity: owned.quantity,
+              },
+            ];
+          },
+        );
+        if (resolved.length > 0) {
+          setSharedBasketItems(resolved);
+        }
+      })
+      .catch((err) => {
+        console.error("Failed to load shared basket:", err);
+        showToast("Failed to load shared basket");
+      })
+      .finally(() => setIsLoadingShared(false));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const handleShareBasket = async () => {
+    if (items.length === 0) {
+      showToast("Your basket is empty");
+      return;
+    }
+    const encoded = encodeBasketToUrl(items);
+    const url = `${window.location.origin}${BASE_PATH}/basket?basket=${encoded}`;
+    try {
+      await navigator.clipboard.writeText(url);
+      showToast("Share link copied!");
+    } catch {
+      showToast("Failed to copy share link");
+    }
+  };
 
   const handleCopyToClipboard = async () => {
     if (items.length === 0) {
@@ -82,10 +166,55 @@ export default function BasketPage() {
           </div>
         </div>
 
+        {isLoadingShared && (
+          <div className="mb-4 rounded-xl border-2 border-accent/40 bg-accent/10 p-4 text-sm text-muted-foreground">
+            Loading shared basket&hellip;
+          </div>
+        )}
+
+        {sharedBasketItems && (
+          <div className="mb-4 rounded-xl border-2 border-accent/40 bg-accent/10 p-4">
+            <p className="font-medium mb-1">
+              A shared basket with{" "}
+              <span
+                className="text-accent"
+                style={{ fontFamily: "var(--font-display)" }}
+              >
+                {sharedBasketItems.length} card
+                {sharedBasketItems.length !== 1 ? "s" : ""}
+              </span>{" "}
+              was found in this link.
+            </p>
+            <p className="text-sm text-muted-foreground mb-3">
+              This will replace your current basket.
+            </p>
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={() => {
+                  setItems(sharedBasketItems);
+                  setSharedBasketItems(null);
+                  showToast("Basket replaced with shared basket");
+                }}
+                className="rounded-lg bg-accent px-4 py-2 text-sm font-medium text-white hover:opacity-90 transition-opacity"
+              >
+                Yes, replace
+              </button>
+              <button
+                type="button"
+                onClick={() => setSharedBasketItems(null)}
+                className="rounded-lg border border-border px-4 py-2 text-sm hover:bg-muted transition-colors"
+              >
+                Dismiss
+              </button>
+            </div>
+          </div>
+        )}
+
         <section className="max-w-175 bg-card border-4 border-border rounded-2xl shadow-xl overflow-hidden">
           <div className="h-3 bg-linear-to-r from-accent to-primary" />
           <div className="p-5 sm:p-6">
-            <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div className="mb-4 flex flex-col gap-3">
               <div className="flex items-center gap-3">
                 <h2
                   className="text-xl"
@@ -106,6 +235,16 @@ export default function BasketPage() {
               </div>
 
               <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={handleShareBasket}
+                  disabled={items.length === 0}
+                  className="inline-flex items-center gap-2 rounded-lg border border-border px-3 py-2 text-sm hover:bg-muted disabled:opacity-50 disabled:hover:bg-transparent"
+                >
+                  <Share2 className="h-4 w-4" />
+                  Share Link
+                </button>
+
                 <button
                   type="button"
                   onClick={handleCopyToClipboard}
