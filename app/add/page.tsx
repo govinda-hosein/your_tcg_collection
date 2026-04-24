@@ -230,6 +230,7 @@ export default function AddCardPage() {
                       src={selectedCard.images.large}
                       alt={selectedCard.name}
                       fill
+                      unoptimized
                       sizes="144px"
                       className="object-cover"
                     />
@@ -334,6 +335,7 @@ export default function AddCardPage() {
                 src={selectedCard.images.large}
                 alt={selectedCard.name}
                 fill
+                unoptimized
                 sizes="(max-width: 768px) 100vw, 768px"
                 className="object-contain"
                 priority

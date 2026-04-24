@@ -152,6 +152,7 @@ export function CardItem({ card, onClick, index, onBasketAdd }: CardItemProps) {
               src={pokemonCard?.images?.large || "/placeholder.png"}
               alt={pokemonCard?.name || "Pokemon Card"}
               fill
+              unoptimized
               sizes="(max-width: 640px) 100vw, (max-width: 1280px) 33vw, 25vw"
               className="object-contain"
             />

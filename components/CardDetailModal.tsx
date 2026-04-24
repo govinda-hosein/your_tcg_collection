@@ -92,6 +92,7 @@ export function CardDetailModal({
               }
               alt={pokemonCard?.name || "Pokemon Card"}
               fill
+              unoptimized
               sizes="(max-width: 768px) 100vw, 50vw"
               className="object-contain p-4 md:p-6"
             />
