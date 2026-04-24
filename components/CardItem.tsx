@@ -1,13 +1,14 @@
-import type { OwnedCardViewModel } from "@/database/ownedCard.model";
 import {
   addBasketItem,
   readBasketFromStorage,
   writeBasketToStorage,
 } from "@/lib/basket";
+import { useEffect, useMemo, useState } from "react";
+
+import type { OwnedCardViewModel } from "@/database/ownedCard.model";
 import { RARITY_COLORS } from "@/lib/constants";
 import { isHoloRarity } from "@/lib/functions";
 import Image from "next/image";
-import { useEffect, useMemo, useState } from "react";
 
 type BasketAddEvent = {
   cardName: string;
@@ -149,7 +150,7 @@ export function CardItem({ card, onClick, index, onBasketAdd }: CardItemProps) {
           {/* Placeholder Pokemon Silhouette */}
           <div className="absolute inset-0 flex items-center justify-center bg-black/5">
             <Image
-              src={pokemonCard?.images?.large || "/placeholder.png"}
+              src={pokemonCard?.images?.small || "/placeholder.png"}
               alt={pokemonCard?.name || "Pokemon Card"}
               fill
               unoptimized
