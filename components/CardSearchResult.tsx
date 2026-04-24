@@ -34,6 +34,7 @@ export function CardSearchResult({ card, onClick }: CardSearchResultProps) {
           src={card.images.small}
           alt={card.name}
           fill
+          unoptimized
           sizes="64px"
           className="object-cover"
         />

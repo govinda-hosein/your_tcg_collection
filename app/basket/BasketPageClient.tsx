@@ -341,6 +341,7 @@ export function BasketPageClient() {
                               src={item.cardImage}
                               alt={item.cardName}
                               fill
+                              unoptimized
                               className="object-contain"
                             />
                           </button>
@@ -435,6 +436,7 @@ export function BasketPageClient() {
                 src={selectedImageUrl}
                 alt="Card preview"
                 fill
+                unoptimized
                 sizes="(max-width: 768px) 100vw, 80vw"
                 className="object-contain p-4 md:p-6"
               />
