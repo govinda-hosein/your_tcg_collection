@@ -1,6 +1,7 @@
 import type { PokemonCardViewModel } from "@/database";
 import { RARITY_COLORS } from "@/lib/constants";
 import { isHoloRarity } from "@/lib/functions";
+import { withBasePath } from "@/lib/url";
 import Image from "next/image";
 
 interface CardSearchResultProps {
@@ -8,10 +9,27 @@ interface CardSearchResultProps {
   onClick: () => void;
 }
 
+const TYPE_ICON_PATHS: Record<string, string> = {
+  Fire: "/icons/energy-fire.png",
+  Water: "/icons/energy-water.png",
+  Lightning: "/icons/energy-lightning.png",
+  Grass: "/icons/energy-grass.png",
+  Psychic: "/icons/energy-psychic.png",
+  Fighting: "/icons/energy-fighting.png",
+  Darkness: "/icons/energy-darkness.png",
+  Metal: "/icons/energy-metal.png",
+  Dragon: "/icons/energy-dragon.png",
+  Colorless: "/icons/energy-normal.png",
+};
+
 export function CardSearchResult({ card, onClick }: CardSearchResultProps) {
   const rarityGradient =
     RARITY_COLORS[card.rarity] || "from-gray-300 to-gray-200";
   const isHolo = isHoloRarity(card.rarity);
+  const primaryType = card.types?.[0] ?? "";
+  const typeImageUrl = TYPE_ICON_PATHS[primaryType]
+    ? withBasePath(TYPE_ICON_PATHS[primaryType])
+    : "";
 
   return (
     <button
@@ -55,20 +73,18 @@ export function CardSearchResult({ card, onClick }: CardSearchResultProps) {
       </div>
 
       {/* Type Badge */}
-      {card.types && card.types.length > 0 && (
-        <div className="text-2xl shrink-0">
-          {card.types[0] === "Fire" && "🔥"}
-          {card.types[0] === "Water" && "💧"}
-          {card.types[0] === "Electric" && "⚡"}
-          {card.types[0] === "Grass" && "🌿"}
-          {card.types[0] === "Psychic" && "🔮"}
-          {card.types[0] === "Fighting" && "👊"}
-          {card.types[0] === "Dark" && "🌙"}
-          {card.types[0] === "Steel" && "⚙️"}
-          {card.types[0] === "Dragon" && "🐉"}
-          {card.types[0] === "Fairy" && "✨"}
+      {typeImageUrl ? (
+        <div className="relative h-8 w-8 shrink-0 overflow-hidden rounded-md">
+          <Image
+            src={typeImageUrl}
+            alt={`${card.types?.[0] ?? "Unknown"} type icon`}
+            fill
+            unoptimized
+            sizes="32px"
+            className="object-cover"
+          />
         </div>
-      )}
+      ) : null}
     </button>
   );
 }
