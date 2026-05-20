@@ -32,7 +32,12 @@ export async function GET() {
         },
         quantity: ownedCard.quantity,
       }))
-      .sort((a, b) => a.card.name.localeCompare(b.card.name));
+      .sort((a, b) =>
+        (a.card.number ?? "").localeCompare(b.card.number ?? "", undefined, {
+          numeric: true,
+          sensitivity: "base",
+        }),
+      );
 
     return NextResponse.json(response, { status: 200 });
   } catch (e) {
