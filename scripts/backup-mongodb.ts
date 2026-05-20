@@ -1,8 +1,8 @@
 import { mkdir, writeFile } from "node:fs/promises";
-import path from "node:path";
 
 import { loadEnvConfig } from "@next/env";
 import mongoose from "mongoose";
+import path from "node:path";
 
 loadEnvConfig(process.cwd());
 
@@ -17,7 +17,12 @@ async function runBackup() {
   await connectDB();
 
   const timestamp = getTimestamp();
-  const backupDir = path.resolve(process.cwd(), "backups", "mongodb", timestamp);
+  const backupDir = path.resolve(
+    process.cwd(),
+    "backups",
+    "mongodb",
+    timestamp,
+  );
   await mkdir(backupDir, { recursive: true });
 
   const collections = [
@@ -38,7 +43,8 @@ async function runBackup() {
     },
   ] as const;
 
-  const summary: Array<{ collection: string; count: number; file: string }> = [];
+  const summary: Array<{ collection: string; count: number; file: string }> =
+    [];
 
   for (const collection of collections) {
     const documents = await collection.fetch();
