@@ -8,6 +8,7 @@
     "start": "next start",
     "lint": "eslint",
     "backup:db": "tsx scripts/backup-mongodb.ts",
+    "restore:db": "tsx scripts/restore-mongodb.ts",
     "seed:sets": "tsx scripts/seed-sets.ts",
     "seed:pokemon-cards": "tsx scripts/seed-pokemon-cards.ts"
   },
