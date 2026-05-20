@@ -3,7 +3,7 @@ import {
   readBasketFromStorage,
   writeBasketToStorage,
 } from "@/lib/basket";
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 
 import type { OwnedCardViewModel } from "@/database/ownedCard.model";
 import { RARITY_COLORS } from "@/lib/constants";
@@ -45,19 +45,17 @@ export function CardItem({ card, onClick, index, onBasketAdd }: CardItemProps) {
   const isHolo = isHoloRarity(pokemonCard?.rarity);
   const [basketQuantityToAdd, setBasketQuantityToAdd] = useState(1);
   const [justAdded, setJustAdded] = useState(false);
-  const [inBasketQuantity, setInBasketQuantity] = useState(0);
+  const [inBasketQuantity, setInBasketQuantity] = useState(() => {
+    const existingItems = readBasketFromStorage();
+    const currentInBasket =
+      existingItems.find((item) => item.cardId === card.cardId)?.quantity ?? 0;
+    return Math.min(currentInBasket, card.quantity);
+  });
 
   const quantityOptions = useMemo(
     () => Array.from({ length: Math.max(1, card.quantity) }, (_, i) => i + 1),
     [card.quantity],
   );
-
-  useEffect(() => {
-    const existingItems = readBasketFromStorage();
-    const currentInBasket =
-      existingItems.find((item) => item.cardId === card.cardId)?.quantity ?? 0;
-    setInBasketQuantity(Math.min(currentInBasket, card.quantity));
-  }, [card.cardId, card.quantity]);
 
   const handleAddToBasket = (event: React.MouseEvent<HTMLButtonElement>) => {
     event.stopPropagation();
@@ -85,7 +83,7 @@ export function CardItem({ card, onClick, index, onBasketAdd }: CardItemProps) {
       nextItems.find((item) => item.cardId === card.cardId)?.quantity ?? 0;
     const addedQuantity = Math.max(0, nextInBasket - previousInBasket);
 
-    setInBasketQuantity(nextInBasket);
+    setInBasketQuantity(Math.min(nextInBasket, card.quantity));
     onBasketAdd?.({
       cardName: pokemonCard?.name || "Unknown Card",
       addedQuantity,
