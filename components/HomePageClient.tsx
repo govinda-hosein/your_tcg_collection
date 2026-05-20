@@ -12,7 +12,6 @@ import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useEffect, useRef, useState } from "react";
 
 import { AppToast } from "@/components/AppToast";
-import { ArtistSelect } from "@/components/ArtistSelect";
 import { CardGrid } from "@/components/CardGrid";
 import { RaritySelect } from "@/components/RaritySelect";
 import { SearchBar } from "@/components/SearchBar";
@@ -442,11 +441,11 @@ function HomeContent() {
               sets={stats.sets}
               onChange={handleSetChange}
             />
-            <ArtistSelect
+            {/* <ArtistSelect
               value={selectedArtist}
               artists={artistOptions}
               onChange={handleArtistChange}
-            />
+            /> */}
           </div>
 
           <div className="flex items-center gap-3">
