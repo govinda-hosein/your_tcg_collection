@@ -20,6 +20,7 @@ import type { OwnedCardViewModel } from "@/database/ownedCard.model";
 import { useToast } from "@/hooks/useToast";
 import { withBasePath } from "@/lib/url";
 import Link from "next/link";
+import { ArtistSelect } from "./ArtistSelect";
 
 type CollectionStatsResponse = {
   totalQuantity: number;
@@ -441,11 +442,11 @@ function HomeContent() {
               sets={stats.sets}
               onChange={handleSetChange}
             />
-            {/* <ArtistSelect
+            <ArtistSelect
               value={selectedArtist}
               artists={artistOptions}
               onChange={handleArtistChange}
-            /> */}
+            />
           </div>
 
           <div className="flex items-center gap-3">
