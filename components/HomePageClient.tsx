@@ -430,7 +430,7 @@ function HomeContent() {
         </div>
 
         {/* Controls */}
-        <div className="mt-2 flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between w-full">
+        <div className="mt-2 flex w-full flex-col gap-4">
           <div className="flex-1 flex flex-col sm:flex-row gap-3 items-start sm:items-center w-full">
             <SearchBar value={searchQuery} onChange={handleSearchChange} />
             <RaritySelect
@@ -449,7 +449,7 @@ function HomeContent() {
             />
           </div>
 
-          <div className="flex items-center gap-3">
+          <div className="flex w-full items-center justify-center gap-3">
             <Link
               className="px-6 py-3 rounded-lg border-2 border-accent/60 bg-accent/15 text-foreground
                 shadow-md flex items-center gap-2 hover:border-accent hover:bg-accent/25
