@@ -2,6 +2,7 @@ import { Edit2, Save, Trash2, X } from "lucide-react";
 
 import type { OwnedCardViewModel } from "@/database/ownedCard.model";
 import { RARITY_COLORS } from "@/lib/constants";
+import { useSession } from "next-auth/react";
 import Image from "next/image";
 import { useState } from "react";
 
@@ -53,6 +54,9 @@ export function CardDetailModal({
 
   const rarityGradient =
     RARITY_COLORS[pokemonCard?.rarity ?? ""] || "from-gray-300 to-gray-200";
+
+  const { data: session } = useSession();
+  const isAdmin = !!session;
 
   return (
     <div
@@ -118,6 +122,13 @@ export function CardDetailModal({
                   </div>
 
                   <div className="md:space-y-3 md:mt-6">
+                    {isAdmin && (
+                      <div className="flex items-center justify-between py-2 border-b border-border">
+                        <span className="text-muted-foreground">Card ID</span>
+                        <span className="font-medium">{card.cardId}</span>
+                      </div>
+                    )}
+
                     <div className="flex items-center justify-between py-2 border-b border-border">
                       <span className="text-muted-foreground">Set</span>
                       <span className="font-medium">
@@ -138,15 +149,6 @@ export function CardDetailModal({
                         {pokemonCard?.artist || "Unknown Artist"}
                       </span>
                     </div>
-
-                    {pokemonCard?.types?.[0] && (
-                      <div className="flex items-center justify-between py-2 border-b border-border">
-                        <span className="text-muted-foreground">Type</span>
-                        <span className="font-medium">
-                          {pokemonCard.types[0]}
-                        </span>
-                      </div>
-                    )}
 
                     <div className="flex items-center justify-between py-2 border-b border-border">
                       <span className="text-muted-foreground">In Stock</span>
