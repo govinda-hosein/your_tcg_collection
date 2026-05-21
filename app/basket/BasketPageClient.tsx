@@ -4,6 +4,7 @@ import {
   ArrowLeft,
   Copy,
   Minus,
+  PackageMinus,
   Plus,
   Share2,
   ShoppingBasket,
@@ -17,6 +18,8 @@ import { useEffect, useState } from "react";
 
 import { AppToast } from "@/components/AppToast";
 import type { OwnedCardViewModel } from "@/database/ownedCard.model";
+import { useSession } from "next-auth/react";
+
 import { useBasket } from "@/hooks/useBasket";
 import { useToast } from "@/hooks/useToast";
 import { BasketItem, decodeBasketParam, encodeBasketToUrl } from "@/lib/basket";
@@ -44,6 +47,11 @@ export function BasketPageClient() {
   const [isLoadingShared, setIsLoadingShared] = useState(false);
   const [animatingButton, setAnimatingButton] = useState<string | null>(null);
   const [selectedImageUrl, setSelectedImageUrl] = useState<string | null>(null);
+  const [showRemoveConfirm, setShowRemoveConfirm] = useState(false);
+  const [isRemoving, setIsRemoving] = useState(false);
+
+  const { data: session } = useSession();
+  const isAdmin = !!session;
 
   const openImageModal = async (item: BasketItem) => {
     // If we already have the large image, use it
@@ -135,6 +143,41 @@ export function BasketPageClient() {
       showToast("Share link copied!");
     } catch {
       showToast("Failed to copy share link");
+    }
+  };
+
+  const handleRemoveFromCollection = async () => {
+    if (items.length === 0) return;
+    setIsRemoving(true);
+    setShowRemoveConfirm(false);
+    try {
+      const response = await fetch(
+        `${BASE_PATH}/api/admin/owned-cards/bulk-remove`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            items: items.map((item) => ({
+              cardId: item.cardId,
+              quantity: item.quantity,
+            })),
+          }),
+        },
+      );
+      if (!response.ok) {
+        const err = (await response.json()) as { error?: string };
+        showToast(err.error ?? "Failed to remove from collection");
+        return;
+      }
+      const { removed } = (await response.json()) as { removed: number };
+      clearBasket();
+      showToast(
+        `Removed ${removed} card${removed !== 1 ? "s" : ""} from collection`,
+      );
+    } catch {
+      showToast("Failed to remove from collection");
+    } finally {
+      setIsRemoving(false);
     }
   };
 
@@ -308,6 +351,20 @@ export function BasketPageClient() {
                   Clear
                 </button>
               </div>
+
+              {isAdmin && (
+                <div>
+                  <button
+                    type="button"
+                    onClick={() => setShowRemoveConfirm(true)}
+                    disabled={items.length === 0 || isRemoving}
+                    className="inline-flex items-center gap-2 rounded-lg border border-destructive/60 px-3 py-2 text-sm text-destructive hover:bg-destructive/10 disabled:opacity-50 disabled:hover:bg-transparent transition-colors"
+                  >
+                    <PackageMinus className="h-4 w-4" />
+                    {isRemoving ? "Removing..." : "Remove from Collection"}
+                  </button>
+                </div>
+              )}
             </div>
 
             {!isHydrated ? (
@@ -440,6 +497,54 @@ export function BasketPageClient() {
                 sizes="(max-width: 768px) 100vw, 80vw"
                 className="object-contain p-4 md:p-6"
               />
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showRemoveConfirm && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+          <div className="w-full max-w-sm rounded-2xl border-2 border-border bg-card p-6 shadow-xl">
+            <h2
+              className="text-lg font-semibold mb-2"
+              style={{ fontFamily: "var(--font-display)" }}
+            >
+              Remove from Collection?
+            </h2>
+            <p className="text-sm text-muted-foreground mb-1">
+              This will deduct the following quantities from your owned cards:
+            </p>
+            <ul className="text-sm mb-4 space-y-0.5 max-h-48 overflow-y-auto">
+              {items.map((item) => (
+                <li key={item.cardId} className="flex justify-between gap-2">
+                  <span className="truncate text-foreground">
+                    {item.cardName}
+                  </span>
+                  <span className="shrink-0 text-muted-foreground">
+                    ×{item.quantity}
+                  </span>
+                </li>
+              ))}
+            </ul>
+            <p className="text-xs text-muted-foreground mb-5">
+              Cards will be deleted from the collection if their quantity
+              reaches zero.
+            </p>
+            <div className="flex gap-3">
+              <button
+                type="button"
+                onClick={handleRemoveFromCollection}
+                className="flex-1 rounded-lg bg-destructive px-4 py-2 text-sm font-medium text-white hover:opacity-90 transition-opacity"
+              >
+                Yes, Remove
+              </button>
+              <button
+                type="button"
+                onClick={() => setShowRemoveConfirm(false)}
+                className="flex-1 rounded-lg border border-border px-4 py-2 text-sm hover:bg-muted transition-colors"
+              >
+                Cancel
+              </button>
             </div>
           </div>
         </div>
