@@ -4,7 +4,7 @@ import type { OwnedCardViewModel } from "@/database/ownedCard.model";
 import { RARITY_COLORS } from "@/lib/constants";
 import { useSession } from "next-auth/react";
 import Image from "next/image";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 interface CardDetailModalProps {
   card: OwnedCardViewModel;
@@ -29,6 +29,30 @@ export function CardDetailModal({
   const [quantityInput, setQuantityInput] = useState(String(card.quantity));
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const pokemonCard = card.card;
+
+  useEffect(() => {
+    const scrollY = window.scrollY;
+    const originalHtmlOverflow = document.documentElement.style.overflow;
+    const originalBodyOverflow = document.body.style.overflow;
+    const originalBodyPosition = document.body.style.position;
+    const originalBodyTop = document.body.style.top;
+    const originalBodyWidth = document.body.style.width;
+
+    document.documentElement.style.overflow = "hidden";
+    document.body.style.overflow = "hidden";
+    document.body.style.position = "fixed";
+    document.body.style.top = `-${scrollY}px`;
+    document.body.style.width = "100%";
+
+    return () => {
+      document.documentElement.style.overflow = originalHtmlOverflow;
+      document.body.style.overflow = originalBodyOverflow;
+      document.body.style.position = originalBodyPosition;
+      document.body.style.top = originalBodyTop;
+      document.body.style.width = originalBodyWidth;
+      window.scrollTo(0, scrollY);
+    };
+  }, []);
 
   const getNormalizedQuantity = () => {
     const parsed = Number.parseInt(quantityInput, 10);
