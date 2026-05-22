@@ -1,8 +1,8 @@
 "use client";
 
+import { BasketItem, decodeBasketParam, encodeBasketToUrl } from "@/lib/basket";
 import {
   ArrowLeft,
-  Copy,
   Minus,
   PackageMinus,
   Plus,
@@ -11,19 +11,17 @@ import {
   Trash2,
   X,
 } from "lucide-react";
-import Image from "next/image";
-import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 
 import { AppToast } from "@/components/AppToast";
 import type { OwnedCardViewModel } from "@/database/ownedCard.model";
-import { useSession } from "next-auth/react";
-
 import { useBasket } from "@/hooks/useBasket";
 import { useToast } from "@/hooks/useToast";
-import { BasketItem, decodeBasketParam, encodeBasketToUrl } from "@/lib/basket";
 import { RARITY_COLORS } from "@/lib/constants";
+import { useSession } from "next-auth/react";
+import Image from "next/image";
+import Link from "next/link";
 
 const BASE_PATH = process.env.NEXT_PUBLIC_BASE_PATH ?? "";
 
@@ -140,9 +138,9 @@ export function BasketPageClient() {
     const url = `${window.location.origin}${BASE_PATH}/basket?basket=${encoded}`;
     try {
       await navigator.clipboard.writeText(url);
-      showToast("Share link copied!");
+      showToast("Basket link copied!");
     } catch {
-      showToast("Failed to copy share link");
+      showToast("Failed to copy basket link");
     }
   };
 
@@ -178,30 +176,6 @@ export function BasketPageClient() {
       showToast("Failed to remove from collection");
     } finally {
       setIsRemoving(false);
-    }
-  };
-
-  const handleCopyToClipboard = async () => {
-    if (items.length === 0) {
-      showToast("Your basket is empty");
-      return;
-    }
-    animateButton("copy");
-
-    const clipboardText = items
-      .map(
-        (item, index) =>
-          `${index + 1}. ${item.cardName} | Qty: ${item.quantity}${
-            item.setName ? ` | Set: ${item.setName}` : ""
-          }${item.rarity ? ` | Rarity: ${item.rarity}` : ""}`,
-      )
-      .join("\n");
-
-    try {
-      await navigator.clipboard.writeText(clipboardText);
-      showToast(`Copied ${items.length} cards to clipboard`);
-    } catch {
-      showToast("Failed to copy basket");
     }
   };
 
@@ -321,19 +295,7 @@ export function BasketPageClient() {
                   }`}
                 >
                   <Share2 className="h-4 w-4" />
-                  Share Link
-                </button>
-
-                <button
-                  type="button"
-                  onClick={handleCopyToClipboard}
-                  disabled={items.length === 0}
-                  className={`inline-flex items-center gap-2 rounded-lg border border-border px-3 py-2 text-sm hover:bg-muted disabled:opacity-50 disabled:hover:bg-transparent transition-transform ${
-                    animatingButton === "copy" ? "scale-110" : ""
-                  }`}
-                >
-                  <Copy className="h-4 w-4" />
-                  Copy to Clipboard
+                  Share Basket
                 </button>
 
                 <button
