@@ -10,7 +10,8 @@
     "backup:db": "tsx scripts/backup-mongodb.ts",
     "restore:db": "tsx scripts/restore-mongodb.ts",
     "seed:sets": "tsx scripts/seed-sets.ts",
-    "seed:pokemon-cards": "tsx scripts/seed-pokemon-cards.ts"
+    "seed:pokemon-cards": "tsx scripts/seed-pokemon-cards.ts",
+    "update:missing-artists": "tsx scripts/update-missing-artists.ts"
   },
   "dependencies": {
     "lucide-react": "^1.16.0",

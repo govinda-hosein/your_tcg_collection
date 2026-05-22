@@ -1,8 +1,8 @@
 "use client";
 
+import { BasketItem, decodeBasketParam, encodeBasketToUrl } from "@/lib/basket";
 import {
   ArrowLeft,
-  Copy,
   Minus,
   PackageMinus,
   Plus,
@@ -11,19 +11,17 @@ import {
   Trash2,
   X,
 } from "lucide-react";
-import Image from "next/image";
-import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 
 import { AppToast } from "@/components/AppToast";
 import type { OwnedCardViewModel } from "@/database/ownedCard.model";
-import { useSession } from "next-auth/react";
-
 import { useBasket } from "@/hooks/useBasket";
 import { useToast } from "@/hooks/useToast";
-import { BasketItem, decodeBasketParam, encodeBasketToUrl } from "@/lib/basket";
 import { RARITY_COLORS } from "@/lib/constants";
+import { useSession } from "next-auth/react";
+import Image from "next/image";
+import Link from "next/link";
 
 const BASE_PATH = process.env.NEXT_PUBLIC_BASE_PATH ?? "";
 
@@ -44,6 +42,7 @@ export function BasketPageClient() {
   const [sharedBasketItems, setSharedBasketItems] = useState<
     BasketItem[] | null
   >(null);
+  const [showSharedBasketDialog, setShowSharedBasketDialog] = useState(false);
   const [isLoadingShared, setIsLoadingShared] = useState(false);
   const [animatingButton, setAnimatingButton] = useState<string | null>(null);
   const [selectedImageUrl, setSelectedImageUrl] = useState<string | null>(null);
@@ -120,6 +119,7 @@ export function BasketPageClient() {
         );
         if (resolved.length > 0) {
           setSharedBasketItems(resolved);
+          setShowSharedBasketDialog(true);
         }
       })
       .catch((err) => {
@@ -140,9 +140,9 @@ export function BasketPageClient() {
     const url = `${window.location.origin}${BASE_PATH}/basket?basket=${encoded}`;
     try {
       await navigator.clipboard.writeText(url);
-      showToast("Share link copied!");
+      showToast("Basket link copied!");
     } catch {
-      showToast("Failed to copy share link");
+      showToast("Failed to copy basket link");
     }
   };
 
@@ -178,30 +178,6 @@ export function BasketPageClient() {
       showToast("Failed to remove from collection");
     } finally {
       setIsRemoving(false);
-    }
-  };
-
-  const handleCopyToClipboard = async () => {
-    if (items.length === 0) {
-      showToast("Your basket is empty");
-      return;
-    }
-    animateButton("copy");
-
-    const clipboardText = items
-      .map(
-        (item, index) =>
-          `${index + 1}. ${item.cardName} | Qty: ${item.quantity}${
-            item.setName ? ` | Set: ${item.setName}` : ""
-          }${item.rarity ? ` | Rarity: ${item.rarity}` : ""}`,
-      )
-      .join("\n");
-
-    try {
-      await navigator.clipboard.writeText(clipboardText);
-      showToast(`Copied ${items.length} cards to clipboard`);
-    } catch {
-      showToast("Failed to copy basket");
     }
   };
 
@@ -321,19 +297,7 @@ export function BasketPageClient() {
                   }`}
                 >
                   <Share2 className="h-4 w-4" />
-                  Share Link
-                </button>
-
-                <button
-                  type="button"
-                  onClick={handleCopyToClipboard}
-                  disabled={items.length === 0}
-                  className={`inline-flex items-center gap-2 rounded-lg border border-border px-3 py-2 text-sm hover:bg-muted disabled:opacity-50 disabled:hover:bg-transparent transition-transform ${
-                    animatingButton === "copy" ? "scale-110" : ""
-                  }`}
-                >
-                  <Copy className="h-4 w-4" />
-                  Copy to Clipboard
+                  Share Basket
                 </button>
 
                 <button
@@ -544,6 +508,45 @@ export function BasketPageClient() {
                 className="flex-1 rounded-lg border border-border px-4 py-2 text-sm hover:bg-muted transition-colors"
               >
                 Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {sharedBasketItems && showSharedBasketDialog && (
+        <div className="fixed inset-0 z-60 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+          <div className="w-full max-w-sm rounded-2xl border-2 border-border bg-card p-6 shadow-xl">
+            <h2
+              className="text-lg font-semibold mb-2"
+              style={{ fontFamily: "var(--font-display)" }}
+            >
+              Replace Basket?
+            </h2>
+            <p className="text-sm text-muted-foreground mb-5">
+              A shared basket with {sharedBasketItems.length} card
+              {sharedBasketItems.length !== 1 ? "s" : ""} was found in this
+              link. This will replace your current basket.
+            </p>
+            <div className="flex gap-3">
+              <button
+                type="button"
+                onClick={() => {
+                  setItems(sharedBasketItems);
+                  setSharedBasketItems(null);
+                  setShowSharedBasketDialog(false);
+                  showToast("Basket replaced with shared basket");
+                }}
+                className="flex-1 rounded-lg bg-accent px-4 py-2 text-sm font-medium text-white hover:opacity-90 transition-opacity"
+              >
+                Yes, Replace
+              </button>
+              <button
+                type="button"
+                onClick={() => setShowSharedBasketDialog(false)}
+                className="flex-1 rounded-lg border border-border px-4 py-2 text-sm hover:bg-muted transition-colors"
+              >
+                Dismiss
               </button>
             </div>
           </div>

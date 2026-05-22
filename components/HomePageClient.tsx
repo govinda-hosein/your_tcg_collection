@@ -13,6 +13,7 @@ import { Suspense, useEffect, useRef, useState } from "react";
 
 import { AppToast } from "@/components/AppToast";
 import { CardGrid } from "@/components/CardGrid";
+import { LoadingState } from "@/components/LoadingState";
 import { RaritySelect } from "@/components/RaritySelect";
 import { SearchBar } from "@/components/SearchBar";
 import { SetSelect } from "@/components/SetSelect";
@@ -20,6 +21,7 @@ import type { OwnedCardViewModel } from "@/database/ownedCard.model";
 import { useToast } from "@/hooks/useToast";
 import { withBasePath } from "@/lib/url";
 import Link from "next/link";
+import { ArtistSelect } from "./ArtistSelect";
 
 type CollectionStatsResponse = {
   totalQuantity: number;
@@ -372,19 +374,7 @@ function HomeContent() {
   };
 
   if (isLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="flex flex-col items-center gap-4">
-          <div className="h-12 w-12 animate-spin rounded-full border-4 border-border border-t-primary" />
-          <p
-            className="text-muted-foreground text-sm tracking-widest uppercase"
-            style={{ fontFamily: "var(--font-display)" }}
-          >
-            Loading Collection...
-          </p>
-        </div>
-      </div>
-    );
+    return <LoadingState />;
   }
 
   return (
@@ -429,7 +419,7 @@ function HomeContent() {
         </div>
 
         {/* Controls */}
-        <div className="mt-2 flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between w-full">
+        <div className="mt-2 flex w-full flex-col gap-4">
           <div className="flex-1 flex flex-col sm:flex-row gap-3 items-start sm:items-center w-full">
             <SearchBar value={searchQuery} onChange={handleSearchChange} />
             <RaritySelect
@@ -441,14 +431,14 @@ function HomeContent() {
               sets={stats.sets}
               onChange={handleSetChange}
             />
-            {/* <ArtistSelect
+            <ArtistSelect
               value={selectedArtist}
               artists={artistOptions}
               onChange={handleArtistChange}
-            /> */}
+            />
           </div>
 
-          <div className="flex items-center gap-3">
+          <div className="flex w-full items-center justify-center gap-3">
             <Link
               className="px-6 py-3 rounded-lg border-2 border-accent/60 bg-accent/15 text-foreground
                 shadow-md flex items-center gap-2 hover:border-accent hover:bg-accent/25
