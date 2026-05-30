@@ -1,17 +1,85 @@
 "use client";
 
-import { ArrowLeft, LogIn, LogOut, ShieldCheck } from "lucide-react";
+import { ArrowLeft, LogIn, LogOut, Settings, ShieldCheck } from "lucide-react";
 import { signIn, signOut, useSession } from "next-auth/react";
-import { Suspense } from "react";
+import { Suspense, useEffect, useState } from "react";
 
 import { withBasePath } from "@/lib/url";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 
+const COLLECTR_IMPORT_CONFIG_NAME = "show_import_from_collectr";
+
 function AdminLoginContentInner() {
   const { data: session } = useSession();
   const searchParams = useSearchParams();
   const authError = searchParams.get("error");
+  const [showImportFromCollectr, setShowImportFromCollectr] = useState<
+    boolean | null
+  >(null);
+  const [isLoadingSetting, setIsLoadingSetting] = useState(false);
+  const [isSavingSetting, setIsSavingSetting] = useState(false);
+  const [settingsError, setSettingsError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!session) {
+      setShowImportFromCollectr(null);
+      setSettingsError(null);
+      return;
+    }
+
+    setIsLoadingSetting(true);
+    fetch(withBasePath(`/api/admin/config?name=${COLLECTR_IMPORT_CONFIG_NAME}`))
+      .then(async (response) => {
+        if (!response.ok) {
+          throw new Error("Failed to load settings");
+        }
+
+        return (await response.json()) as { enabled?: boolean };
+      })
+      .then((data) => {
+        setShowImportFromCollectr(!!data.enabled);
+      })
+      .catch(() => {
+        setSettingsError("Could not load settings right now.");
+      })
+      .finally(() => {
+        setIsLoadingSetting(false);
+      });
+  }, [session]);
+
+  const handleToggleCollectrImport = async () => {
+    if (showImportFromCollectr === null || isSavingSetting) return;
+
+    setSettingsError(null);
+    setIsSavingSetting(true);
+
+    const nextEnabled = !showImportFromCollectr;
+    setShowImportFromCollectr(nextEnabled);
+
+    try {
+      const response = await fetch(withBasePath("/api/admin/config"), {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: COLLECTR_IMPORT_CONFIG_NAME,
+          enabled: nextEnabled,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to save settings");
+      }
+
+      const data = (await response.json()) as { enabled?: boolean };
+      setShowImportFromCollectr(!!data.enabled);
+    } catch {
+      setShowImportFromCollectr(!nextEnabled);
+      setSettingsError("Could not save setting. Please try again.");
+    } finally {
+      setIsSavingSetting(false);
+    }
+  };
 
   return (
     <main className="min-h-screen relative overflow-hidden px-4 py-8">
@@ -66,6 +134,63 @@ function AdminLoginContentInner() {
               <div className="rounded-lg border border-border bg-muted/40 p-3 text-sm">
                 Welcome, {session.user?.name || session.user?.email || "Admin"}!
               </div>
+
+              <div className="rounded-xl border-2 border-border bg-card/95 p-4 space-y-3">
+                <div className="flex items-start justify-between gap-3">
+                  <div>
+                    <h2
+                      className="text-base tracking-tight"
+                      style={{ fontFamily: "var(--font-display)" }}
+                    >
+                      Settings
+                    </h2>
+                    <p className="text-xs text-muted-foreground mt-0.5">
+                      Manage admin-controlled feature flags.
+                    </p>
+                  </div>
+                  <div className="w-8 h-8 rounded-lg bg-primary/10 text-primary flex items-center justify-center">
+                    <Settings className="w-4 h-4" />
+                  </div>
+                </div>
+
+                <div className="rounded-lg border border-border bg-input-background/50 p-3">
+                  <div className="flex items-center justify-between gap-3">
+                    <div>
+                      <p className="text-sm font-medium">
+                        Show Import From Collectr
+                      </p>
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={handleToggleCollectrImport}
+                      disabled={isLoadingSetting || isSavingSetting}
+                      aria-label="Toggle Show Import From Collectr setting"
+                      aria-pressed={!!showImportFromCollectr}
+                      className={`relative inline-flex h-7 w-12 items-center rounded-full border transition-colors disabled:opacity-60 disabled:cursor-not-allowed ${
+                        showImportFromCollectr
+                          ? "bg-primary border-primary/80"
+                          : "bg-muted border-border"
+                      }`}
+                    >
+                      <span
+                        className={`inline-block h-5 w-5 transform rounded-full bg-white shadow transition-transform ${
+                          showImportFromCollectr
+                            ? "translate-x-6"
+                            : "translate-x-1"
+                        }`}
+                      />
+                    </button>
+                  </div>
+
+                  {settingsError ? (
+                    <div className="mt-2 rounded-md border border-destructive/30 bg-destructive/10 px-2 py-1.5 text-xs text-destructive">
+                      {settingsError}
+                    </div>
+                  ) : null}
+                </div>
+              </div>
+
               <button
                 onClick={() => signOut({ callbackUrl: withBasePath("/admin") })}
                 className="w-full px-5 py-3 bg-destructive text-destructive-foreground rounded-lg
