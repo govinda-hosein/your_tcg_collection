@@ -4,20 +4,22 @@ import { ArrowLeft, LogIn, LogOut, Settings, ShieldCheck } from "lucide-react";
 import { signIn, signOut, useSession } from "next-auth/react";
 import { Suspense, useEffect, useState } from "react";
 
+import { useFeatureFlags } from "@/hooks/useFeatureFlags";
+import { FEATURE_FLAG_NAMES } from "@/lib/featureFlags.config";
 import { withBasePath } from "@/lib/url";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 
-const COLLECTR_IMPORT_CONFIG_NAME = "show_import_from_collectr";
+const COLLECTR_IMPORT_CONFIG_NAME = FEATURE_FLAG_NAMES[0];
 
 function AdminLoginContentInner() {
   const { data: session } = useSession();
+  const { isEnabled } = useFeatureFlags();
   const searchParams = useSearchParams();
   const authError = searchParams.get("error");
   const [showImportFromCollectr, setShowImportFromCollectr] = useState<
     boolean | null
   >(null);
-  const [isLoadingSetting, setIsLoadingSetting] = useState(false);
   const [isSavingSetting, setIsSavingSetting] = useState(false);
   const [settingsError, setSettingsError] = useState<string | null>(null);
 
@@ -28,25 +30,8 @@ function AdminLoginContentInner() {
       return;
     }
 
-    setIsLoadingSetting(true);
-    fetch(withBasePath(`/api/admin/config?name=${COLLECTR_IMPORT_CONFIG_NAME}`))
-      .then(async (response) => {
-        if (!response.ok) {
-          throw new Error("Failed to load settings");
-        }
-
-        return (await response.json()) as { enabled?: boolean };
-      })
-      .then((data) => {
-        setShowImportFromCollectr(!!data.enabled);
-      })
-      .catch(() => {
-        setSettingsError("Could not load settings right now.");
-      })
-      .finally(() => {
-        setIsLoadingSetting(false);
-      });
-  }, [session]);
+    setShowImportFromCollectr(isEnabled(COLLECTR_IMPORT_CONFIG_NAME));
+  }, [session, isEnabled]);
 
   const handleToggleCollectrImport = async () => {
     if (showImportFromCollectr === null || isSavingSetting) return;
@@ -164,7 +149,7 @@ function AdminLoginContentInner() {
                     <button
                       type="button"
                       onClick={handleToggleCollectrImport}
-                      disabled={isLoadingSetting || isSavingSetting}
+                      disabled={isSavingSetting}
                       aria-label="Toggle Show Import From Collectr setting"
                       aria-pressed={!!showImportFromCollectr}
                       className={`relative inline-flex h-7 w-12 items-center rounded-full border transition-colors disabled:opacity-60 disabled:cursor-not-allowed ${
