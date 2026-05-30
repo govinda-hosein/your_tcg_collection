@@ -5,7 +5,9 @@ import { ArrowLeft, Loader2, Search, X, ZoomIn } from "lucide-react";
 import { AppToast } from "@/components/AppToast";
 import { CardSearchResult } from "@/components/CardSearchResult";
 import type { PokemonCardViewModel } from "@/database";
+import { useFeatureFlags } from "@/hooks/useFeatureFlags";
 import { useToast } from "@/hooks/useToast";
+import { FEATURE_FLAG_NAMES } from "@/lib/featureFlags.config";
 import { withBasePath } from "@/lib/url";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
@@ -13,6 +15,7 @@ import { useState } from "react";
 
 export default function AddCardPage() {
   const router = useRouter();
+  const { isEnabled } = useFeatureFlags();
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState<PokemonCardViewModel[]>(
     [],
@@ -25,6 +28,7 @@ export default function AddCardPage() {
   const [isSaving, setIsSaving] = useState(false);
   const [quantityInput, setQuantityInput] = useState("1");
   const { toastMessage, showToast } = useToast(1700);
+  const showImportFromCollectr = isEnabled(FEATURE_FLAG_NAMES[0]);
 
   const getNormalizedQuantity = () => {
     const parsed = Number.parseInt(quantityInput, 10);
@@ -131,17 +135,30 @@ export default function AddCardPage() {
         </button>
 
         {/* Header */}
-        <div className="mb-8">
-          <h1
-            className="text-5xl mb-2 tracking-tight"
-            style={{ fontFamily: "var(--font-display)" }}
-          >
-            <span className="text-primary">ADD</span>{" "}
-            <span className="text-accent">CARD</span>
-          </h1>
-          <p className="text-muted-foreground">
-            Search and add cards to your collection
-          </p>
+        <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+          <div>
+            <h1
+              className="text-5xl mb-2 tracking-tight"
+              style={{ fontFamily: "var(--font-display)" }}
+            >
+              <span className="text-primary">ADD</span>{" "}
+              <span className="text-accent">CARD</span>
+            </h1>
+            <p className="text-muted-foreground">
+              Search and add cards to your collection
+            </p>
+          </div>
+
+          {showImportFromCollectr ? (
+            <button
+              type="button"
+              onClick={() => showToast("Collectr import coming soon")}
+              className="inline-flex items-center justify-center rounded-lg border-2 border-border bg-accent/10 px-4 py-2.5 text-sm font-medium hover:bg-accent/20 transition-colors"
+              style={{ fontFamily: "var(--font-display)" }}
+            >
+              Import from Collectr
+            </button>
+          ) : null}
         </div>
 
         {/* Search Section */}
