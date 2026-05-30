@@ -11,6 +11,7 @@
     "restore:db": "tsx scripts/restore-mongodb.ts",
     "seed:sets": "tsx scripts/seed-sets.ts",
     "seed:pokemon-cards": "tsx scripts/seed-pokemon-cards.ts",
+    "seed:config": "tsx scripts/seed-config.ts",
     "update:missing-artists": "tsx scripts/update-missing-artists.ts"
   },
   "dependencies": {

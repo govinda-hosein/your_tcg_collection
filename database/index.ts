@@ -10,11 +10,13 @@
  * ```
  */
 
+export { default as Config } from "./config.model";
 export { default as OwnedCard } from "./ownedCard.model";
 export { default as PokemonCard } from "./pokemonCard.model";
 export { default as Set } from "./set.model";
 
 // Export types for TypeScript consumers
+export type { ConfigDocument } from "./config.model";
 export type { OwnedCardDocument } from "./ownedCard.model";
 export type {
   PokemonCardDocument,
