@@ -1,3 +1,6 @@
+import { PokemonCard, Set } from "@/database";
+
+import connectDB from "@/lib/mongodb";
 import { NextResponse } from "next/server";
 
 const REQUIRED_HEADERS = [
@@ -21,6 +24,15 @@ function parseCsvHeaders(csvText: string): string[] {
   return firstDataLine
     .split(",")
     .map((header) => header.trim().replace(/^"|"$/g, ""));
+}
+
+function parseCardNumber(value: string): string {
+  const normalizedValue = value.trim();
+  const firstSegment = normalizedValue.includes("/")
+    ? (normalizedValue.split("/")[0] ?? "")
+    : normalizedValue;
+
+  return firstSegment.match(/\d+/)?.[0] ?? "";
 }
 
 export async function POST(request: Request) {
@@ -68,6 +80,38 @@ export async function POST(request: Request) {
     }
 
     console.log("Collectr CSV headers:", headers);
+
+    const nonEmptyLines = csvText
+      .split(/\r?\n/)
+      .filter((line) => line.trim().length > 0);
+    const dataRows = nonEmptyLines.slice(1);
+    const setColumnIndex = headers.indexOf("Set");
+    const cardNumberColumnIndex = headers.indexOf("Card Number");
+
+    await connectDB();
+
+    for (const [index, rowText] of dataRows.entries()) {
+      const row = rowText
+        .split(",")
+        .map((cell) => cell.trim().replace(/^"|"$/g, ""));
+      const setValue = row[setColumnIndex] ?? "";
+      const cardNumberValue = row[cardNumberColumnIndex] ?? "";
+      const cardNumberFirstPart = parseCardNumber(cardNumberValue);
+      const matchingSet = await Set.findOne({ name: setValue })
+        .select({ _id: 0, id: 1 })
+        .lean();
+      const cardId = `${matchingSet?.id ?? null}-${cardNumberFirstPart}`;
+      const matchingPokemonCard = await PokemonCard.findOne({ id: cardId })
+        .select({ _id: 0, id: 1, name: 1, number: 1, setId: 1 })
+        .lean();
+
+      if (matchingSet) {
+        console.log(
+          `Collectr CSV row ${index + 1} - ${cardId} Pokemon card:`,
+          matchingPokemonCard,
+        );
+      }
+    }
 
     return NextResponse.json({ headers }, { status: 200 });
   } catch (error) {
