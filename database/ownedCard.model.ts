@@ -7,6 +7,11 @@ const ownedCardSchema = new Schema(
   {
     cardId: { type: String, required: true, trim: true, index: true },
     quantity: { type: Number, required: true, min: 1 },
+    price: { type: Number, min: 0, default: 1 },
+    cardCondition: {
+      type: String,
+      default: "Mint",
+    },
   },
   {
     versionKey: false,
@@ -27,7 +32,7 @@ export type OwnedCardModelType = Model<OwnedCardDocument>;
 
 export type OwnedCardViewModel = Pick<
   OwnedCardDocument,
-  "cardId" | "quantity"
+  "cardId" | "quantity" | "price" | "cardCondition"
 > & {
   card: Pick<
     PokemonCardDocument,

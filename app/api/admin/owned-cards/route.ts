@@ -7,11 +7,15 @@ import connectDB from "@/lib/mongodb";
 interface CreateOwnedCardBody {
   cardId?: string;
   quantity?: number;
+  price?: number;
+  cardCondition?: string;
 }
 
 interface UpdateOwnedCardBody {
   cardId?: string;
   quantity?: number;
+  price?: number;
+  cardCondition?: string;
 }
 
 async function findOwnedCardViewModel(
@@ -46,6 +50,8 @@ async function findOwnedCardViewModel(
       },
     },
     quantity: ownedCard.quantity,
+    price: ownedCard.price,
+    cardCondition: ownedCard.cardCondition,
   };
 }
 
@@ -56,6 +62,8 @@ export async function POST(request: NextRequest) {
     const body = (await request.json()) as CreateOwnedCardBody;
     const cardId = body.cardId?.trim();
     const quantity = body.quantity;
+    const price = body.price;
+    const cardCondition = body.cardCondition?.trim();
 
     if (!cardId) {
       return NextResponse.json(
@@ -71,6 +79,23 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    if (
+      price !== undefined &&
+      (typeof price !== "number" || Number.isNaN(price) || price < 0)
+    ) {
+      return NextResponse.json(
+        { error: "price must be a number greater than or equal to 0" },
+        { status: 400 },
+      );
+    }
+
+    if (body.cardCondition !== undefined && !cardCondition) {
+      return NextResponse.json(
+        { error: "cardCondition must be a non-empty string" },
+        { status: 400 },
+      );
+    }
+
     const existingPokemonCard = await PokemonCard.exists({ id: cardId });
 
     if (!existingPokemonCard) {
@@ -80,11 +105,24 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    const setUpdate: { price?: number; cardCondition?: string } = {};
+    if (price !== undefined) {
+      setUpdate.price = price;
+    }
+    if (cardCondition) {
+      setUpdate.cardCondition = cardCondition;
+    }
+
     await OwnedCard.findOneAndUpdate(
       { cardId },
-      {
-        $inc: { quantity },
-      },
+      Object.keys(setUpdate).length > 0
+        ? {
+            $inc: { quantity },
+            $set: setUpdate,
+          }
+        : {
+            $inc: { quantity },
+          },
       {
         upsert: true,
         returnDocument: "after",
@@ -118,6 +156,8 @@ export async function PATCH(request: NextRequest) {
     const body = (await request.json()) as UpdateOwnedCardBody;
     const cardId = body.cardId?.trim();
     const quantity = body.quantity;
+    const price = body.price;
+    const cardCondition = body.cardCondition?.trim();
 
     if (!cardId) {
       return NextResponse.json(
@@ -126,16 +166,61 @@ export async function PATCH(request: NextRequest) {
       );
     }
 
-    if (!Number.isInteger(quantity) || quantity === undefined || quantity < 1) {
+    if (
+      quantity !== undefined &&
+      (!Number.isInteger(quantity) || quantity < 1)
+    ) {
       return NextResponse.json(
         { error: "quantity must be an integer greater than 0" },
         { status: 400 },
       );
     }
 
+    if (
+      price !== undefined &&
+      (typeof price !== "number" || Number.isNaN(price) || price < 0)
+    ) {
+      return NextResponse.json(
+        { error: "price must be a number greater than or equal to 0" },
+        { status: 400 },
+      );
+    }
+
+    if (body.cardCondition !== undefined && !cardCondition) {
+      return NextResponse.json(
+        { error: "cardCondition must be a non-empty string" },
+        { status: 400 },
+      );
+    }
+
+    const updates: {
+      quantity?: number;
+      price?: number;
+      cardCondition?: string;
+    } = {};
+    if (quantity !== undefined) {
+      updates.quantity = quantity;
+    }
+    if (price !== undefined) {
+      updates.price = price;
+    }
+    if (cardCondition) {
+      updates.cardCondition = cardCondition;
+    }
+
+    if (Object.keys(updates).length === 0) {
+      return NextResponse.json(
+        {
+          error:
+            "At least one field must be provided: quantity, price, or cardCondition",
+        },
+        { status: 400 },
+      );
+    }
+
     const updated = await OwnedCard.findOneAndUpdate(
       { cardId },
-      { $set: { quantity } },
+      { $set: updates },
       { returnDocument: "after" },
     );
 
