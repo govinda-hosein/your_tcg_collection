@@ -1,5 +1,14 @@
 import { NextResponse } from "next/server";
 
+const REQUIRED_HEADERS = [
+  "Set",
+  "Product Name",
+  "Card Number",
+  "Card Condition",
+  "Quantity",
+  "Market Price",
+] as const;
+
 function parseCsvHeaders(csvText: string): string[] {
   const firstDataLine = csvText
     .split(/\r?\n/)
@@ -40,6 +49,20 @@ export async function POST(request: Request) {
     if (headers.length === 0) {
       return NextResponse.json(
         { error: "Could not read CSV headers from file" },
+        { status: 400 },
+      );
+    }
+
+    const missingHeaders = REQUIRED_HEADERS.filter(
+      (required) => !headers.includes(required),
+    );
+
+    if (missingHeaders.length > 0) {
+      return NextResponse.json(
+        {
+          error: `CSV is missing required columns: ${missingHeaders.join(", ")}`,
+          missingHeaders,
+        },
         { status: 400 },
       );
     }
