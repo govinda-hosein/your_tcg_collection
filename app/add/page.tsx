@@ -25,6 +25,9 @@ export default function AddCardPage() {
     null,
   );
   const [isImageModalOpen, setIsImageModalOpen] = useState(false);
+  const [isImportModalOpen, setIsImportModalOpen] = useState(false);
+  const [importFile, setImportFile] = useState<File | null>(null);
+  const [isImporting, setIsImporting] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [quantityInput, setQuantityInput] = useState("1");
   const { toastMessage, showToast } = useToast(1700);
@@ -112,6 +115,47 @@ export default function AddCardPage() {
     setIsImageModalOpen(false);
   };
 
+  const closeImportModal = () => {
+    setIsImportModalOpen(false);
+    setImportFile(null);
+  };
+
+  const handleCollectrImport = async () => {
+    if (!importFile) {
+      showToast("Select a CSV file first");
+      return;
+    }
+
+    setIsImporting(true);
+    try {
+      const formData = new FormData();
+      formData.append("file", importFile);
+
+      const response = await fetch(
+        withBasePath("/api/owned-cards/import/collectr"),
+        {
+          method: "POST",
+          body: formData,
+        },
+      );
+
+      if (!response.ok) {
+        const errorData = (await response.json()) as { error?: string };
+        showToast(errorData.error ?? "Import failed");
+        return;
+      }
+
+      const data = (await response.json()) as { headers?: string[] };
+      showToast(`Found ${data.headers?.length ?? 0} CSV headers`);
+      closeImportModal();
+    } catch (error) {
+      console.error("Collectr import failed", error);
+      showToast("Import failed");
+    } finally {
+      setIsImporting(false);
+    }
+  };
+
   return (
     <div className="min-h-screen relative overflow-hidden">
       {/* Vintage paper texture overlay */}
@@ -152,7 +196,7 @@ export default function AddCardPage() {
           {showImportFromCollectr ? (
             <button
               type="button"
-              onClick={() => showToast("Collectr import coming soon")}
+              onClick={() => setIsImportModalOpen(true)}
               className="inline-flex items-center justify-center rounded-lg border-2 border-border bg-accent/10 px-4 py-2.5 text-sm font-medium hover:bg-accent/20 transition-colors"
               style={{ fontFamily: "var(--font-display)" }}
             >
@@ -357,6 +401,79 @@ export default function AddCardPage() {
                 className="object-contain"
                 priority
               />
+            </div>
+          </div>
+        </div>
+      )}
+
+      {isImportModalOpen && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center p-4"
+          onClick={closeImportModal}
+        >
+          <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" />
+          <div
+            className="relative z-10 w-full max-w-md rounded-2xl border-4 border-border bg-card p-5 shadow-2xl"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <button
+              type="button"
+              onClick={closeImportModal}
+              className="absolute right-3 top-3 rounded-lg border border-border p-1.5 text-muted-foreground hover:bg-muted transition-colors"
+              aria-label="Close import modal"
+            >
+              <X className="h-4 w-4" />
+            </button>
+
+            <h2
+              className="text-2xl mb-2"
+              style={{ fontFamily: "var(--font-display)" }}
+            >
+              Import from Collectr
+            </h2>
+            <p className="text-sm text-muted-foreground mb-4">
+              Upload a CSV export file.
+            </p>
+
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm mb-2 font-medium">
+                  CSV file
+                </label>
+                <input
+                  type="file"
+                  accept=".csv,text/csv"
+                  onChange={(event) => {
+                    const file = event.target.files?.[0] ?? null;
+                    setImportFile(file);
+                  }}
+                  className="w-full rounded-lg border-2 border-border bg-input-background px-3 py-2 text-sm"
+                />
+                <p className="mt-2 text-xs text-muted-foreground">
+                  {importFile
+                    ? `Selected: ${importFile.name}`
+                    : "No file selected"}
+                </p>
+              </div>
+
+              <div className="flex gap-3 pt-1">
+                <button
+                  type="button"
+                  onClick={closeImportModal}
+                  className="flex-1 rounded-lg border-2 border-border px-4 py-2.5 text-sm hover:bg-muted transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  onClick={handleCollectrImport}
+                  disabled={!importFile || isImporting}
+                  className="flex-1 rounded-lg bg-primary px-4 py-2.5 text-sm text-primary-foreground disabled:opacity-60"
+                  style={{ fontFamily: "var(--font-display)" }}
+                >
+                  {isImporting ? "UPLOADING..." : "UPLOAD CSV"}
+                </button>
+              </div>
             </div>
           </div>
         </div>
