@@ -34,8 +34,8 @@ const pokemonCardSchema = new Schema(
     },
     number: { type: String, required: true, trim: true },
     artist: { type: String, required: false, trim: true },
-    rarity: { type: String, required: true, trim: true },
-    regulationMark: { type: String, required: true, trim: true },
+    rarity: { type: String, required: false, trim: true },
+    regulationMark: { type: String, required: false, trim: true },
     images: { type: imagesSchema, required: true },
   },
   {
