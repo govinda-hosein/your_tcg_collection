@@ -13,6 +13,15 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
+type CollectrUnmatchedRow = {
+  rowNumber: number;
+  set: string;
+  productName: string;
+  cardNumber: string;
+  cardId: string;
+  row: string[];
+};
+
 export default function AddCardPage() {
   const router = useRouter();
   const { isEnabled } = useFeatureFlags();
@@ -28,6 +37,9 @@ export default function AddCardPage() {
   const [isImportModalOpen, setIsImportModalOpen] = useState(false);
   const [importFile, setImportFile] = useState<File | null>(null);
   const [isImporting, setIsImporting] = useState(false);
+  const [collectrUnmatchedRows, setCollectrUnmatchedRows] = useState<
+    CollectrUnmatchedRow[]
+  >([]);
   const [isSaving, setIsSaving] = useState(false);
   const [quantityInput, setQuantityInput] = useState("1");
   const { toastMessage, showToast } = useToast(1700);
@@ -145,8 +157,10 @@ export default function AddCardPage() {
         return;
       }
 
-      const data = (await response.json()) as { headers?: string[] };
-      showToast(`Found ${data.headers?.length ?? 0} CSV headers`);
+      const data = (await response.json()) as {
+        unmatchedRows?: CollectrUnmatchedRow[];
+      };
+      setCollectrUnmatchedRows(data.unmatchedRows ?? []);
       closeImportModal();
     } catch (error) {
       console.error("Collectr import failed", error);
@@ -204,6 +218,50 @@ export default function AddCardPage() {
             </button>
           ) : null}
         </div>
+
+        {collectrUnmatchedRows.length > 0 && (
+          <div className="mb-6 rounded-2xl border-4 border-amber-700 bg-amber-100 p-4 text-amber-950 shadow-lg">
+            <div className="mb-2 flex items-start justify-between gap-3">
+              <div>
+                <h2
+                  className="text-xl"
+                  style={{ fontFamily: "var(--font-display)" }}
+                >
+                  Unmatched Import Rows
+                </h2>
+                <p className="text-sm text-amber-900">
+                  {collectrUnmatchedRows.length} row
+                  {collectrUnmatchedRows.length === 1 ? "" : "s"} could not be
+                  matched to a card.
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setCollectrUnmatchedRows([])}
+                className="rounded-md border border-amber-800 px-2 py-1 text-xs hover:bg-amber-200 transition-colors"
+              >
+                Dismiss
+              </button>
+            </div>
+            <div className="max-h-64 overflow-y-auto rounded-lg border border-amber-300 bg-amber-50">
+              <ul className="divide-y divide-amber-200 text-sm">
+                {collectrUnmatchedRows.map((item) => (
+                  <li key={`${item.rowNumber}-${item.cardId}`} className="p-3">
+                    <div>
+                      Row {item.rowNumber}:{" "}
+                      {item.productName || "Unknown Product"}
+                    </div>
+                    <div className="text-xs text-amber-900/80">
+                      {item.set || "Unknown Set"} -{" "}
+                      {item.cardNumber || "Unknown Number"} - Built card id:{" "}
+                      {item.cardId || "N/A"}
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </div>
+        )}
 
         {/* Search Section */}
         <div

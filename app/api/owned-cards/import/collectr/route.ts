@@ -31,8 +31,19 @@ function parseCardNumber(value: string): string {
   const firstSegment = normalizedValue.includes("/")
     ? (normalizedValue.split("/")[0] ?? "")
     : normalizedValue;
+  const cleanedFirstSegment = firstSegment.trim();
 
-  return firstSegment.match(/\d+/)?.[0] ?? "";
+  if (/[A-Za-z]/.test(cleanedFirstSegment)) {
+    return cleanedFirstSegment;
+  }
+
+  const numericPart = cleanedFirstSegment.match(/\d+/)?.[0] ?? "";
+
+  if (!numericPart) {
+    return "";
+  }
+
+  return numericPart.replace(/^0+/, "") || "0";
 }
 
 export async function POST(request: Request) {
@@ -86,7 +97,16 @@ export async function POST(request: Request) {
       .filter((line) => line.trim().length > 0);
     const dataRows = nonEmptyLines.slice(1);
     const setColumnIndex = headers.indexOf("Set");
+    const productNameColumnIndex = headers.indexOf("Product Name");
     const cardNumberColumnIndex = headers.indexOf("Card Number");
+    const unmatchedRows: Array<{
+      rowNumber: number;
+      set: string;
+      productName: string;
+      cardNumber: string;
+      cardId: string;
+      row: string[];
+    }> = [];
 
     await connectDB();
 
@@ -95,6 +115,7 @@ export async function POST(request: Request) {
         .split(",")
         .map((cell) => cell.trim().replace(/^"|"$/g, ""));
       const setValue = row[setColumnIndex] ?? "";
+      const productNameValue = row[productNameColumnIndex] ?? "";
       const cardNumberValue = row[cardNumberColumnIndex] ?? "";
       const cardNumberFirstPart = parseCardNumber(cardNumberValue);
       const matchingSet = await Set.findOne({ name: setValue })
@@ -105,6 +126,17 @@ export async function POST(request: Request) {
         .select({ _id: 0, id: 1, name: 1, number: 1, setId: 1 })
         .lean();
 
+      if (!matchingPokemonCard) {
+        unmatchedRows.push({
+          rowNumber: index + 2,
+          set: setValue,
+          productName: productNameValue,
+          cardNumber: cardNumberValue,
+          cardId,
+          row,
+        });
+      }
+
       if (matchingSet) {
         console.log(
           `Collectr CSV row ${index + 1} - ${cardId} Pokemon card:`,
@@ -113,7 +145,7 @@ export async function POST(request: Request) {
       }
     }
 
-    return NextResponse.json({ headers }, { status: 200 });
+    return NextResponse.json({ unmatchedRows }, { status: 200 });
   } catch (error) {
     console.error("Failed to import Collectr CSV:", error);
     return NextResponse.json(
