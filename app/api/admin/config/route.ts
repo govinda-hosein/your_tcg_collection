@@ -3,13 +3,43 @@ import { NextRequest, NextResponse } from "next/server";
 
 import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 import { Config } from "@/database";
-import { parseFeatureFlagValue } from "@/lib/featureFlags.config";
+import {
+  DEFAULT_FEATURE_FLAGS,
+  FEATURE_FLAG_NAMES,
+  parseFeatureFlagValue,
+} from "@/lib/featureFlags.config";
 import connectDB from "@/lib/mongodb";
 
 type UpdateConfigBody = {
   name?: string;
   enabled?: boolean;
 };
+
+export async function GET() {
+  const session = await getServerSession(authOptions);
+  if (!session) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  await connectDB();
+
+  const configs = await Config.find({
+    name: { $in: FEATURE_FLAG_NAMES },
+  })
+    .select("name value")
+    .lean<Array<{ name: string; value: string }>>();
+
+  const flags = { ...DEFAULT_FEATURE_FLAGS };
+
+  for (const config of configs) {
+    if (config.name in flags) {
+      const key = config.name as keyof typeof flags;
+      flags[key] = parseFeatureFlagValue(config.value);
+    }
+  }
+
+  return NextResponse.json({ flags });
+}
 
 export async function PATCH(request: NextRequest) {
   const session = await getServerSession(authOptions);

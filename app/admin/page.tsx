@@ -12,9 +12,11 @@ import { signIn, signOut, useSession } from "next-auth/react";
 import { Suspense, useEffect, useState } from "react";
 
 import { AppToast } from "@/components/AppToast";
-import { useFeatureFlags } from "@/hooks/useFeatureFlags";
 import { useToast } from "@/hooks/useToast";
-import { FEATURE_FLAG_NAMES } from "@/lib/featureFlags.config";
+import {
+  FEATURE_FLAG_NAMES,
+  type FeatureFlags,
+} from "@/lib/featureFlags.config";
 import { withBasePath } from "@/lib/url";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
@@ -28,7 +30,6 @@ const SHOW_DELETE_POKEMON_CARD_CONFIG_NAME = FEATURE_FLAG_NAMES[5];
 
 function AdminLoginContentInner() {
   const { data: session } = useSession();
-  const { isEnabled } = useFeatureFlags();
   const searchParams = useSearchParams();
   const authError = searchParams.get("error");
   const [showImportFromCollectr, setShowImportFromCollectr] = useState<
@@ -51,6 +52,15 @@ function AdminLoginContentInner() {
   const [settingsError, setSettingsError] = useState<string | null>(null);
   const { toastMessage, showToast } = useToast(1700);
 
+  const applyFlags = (flags: FeatureFlags) => {
+    setShowImportFromCollectr(flags[COLLECTR_IMPORT_CONFIG_NAME]);
+    setShowPrice(flags[SHOW_PRICE_CONFIG_NAME]);
+    setShowDeleteAllInventory(flags[SHOW_DELETE_ALL_INVENTORY_CONFIG_NAME]);
+    setShowCardCondition(flags[SHOW_CARD_CONDITION_CONFIG_NAME]);
+    setShowCreateCard(flags[SHOW_CREATE_CARD_CONFIG_NAME]);
+    setShowDeletePokemonCard(flags[SHOW_DELETE_POKEMON_CARD_CONFIG_NAME]);
+  };
+
   useEffect(() => {
     if (!session) {
       setShowImportFromCollectr(null);
@@ -63,13 +73,39 @@ function AdminLoginContentInner() {
       return;
     }
 
-    setShowImportFromCollectr(isEnabled(COLLECTR_IMPORT_CONFIG_NAME));
-    setShowPrice(isEnabled(SHOW_PRICE_CONFIG_NAME));
-    setShowDeleteAllInventory(isEnabled(SHOW_DELETE_ALL_INVENTORY_CONFIG_NAME));
-    setShowCardCondition(isEnabled(SHOW_CARD_CONDITION_CONFIG_NAME));
-    setShowCreateCard(isEnabled(SHOW_CREATE_CARD_CONFIG_NAME));
-    setShowDeletePokemonCard(isEnabled(SHOW_DELETE_POKEMON_CARD_CONFIG_NAME));
-  }, [session, isEnabled]);
+    let isCancelled = false;
+
+    const loadSettings = async () => {
+      try {
+        const response = await fetch(withBasePath("/api/admin/config"), {
+          cache: "no-store",
+        });
+
+        if (!response.ok) {
+          throw new Error("Failed to load settings");
+        }
+
+        const data = (await response.json()) as { flags?: FeatureFlags };
+        if (isCancelled) return;
+
+        if (data.flags) {
+          applyFlags(data.flags);
+          setSettingsError(null);
+        }
+      } catch {
+        if (isCancelled) return;
+        setSettingsError(
+          "Could not load settings. Please refresh and try again.",
+        );
+      }
+    };
+
+    void loadSettings();
+
+    return () => {
+      isCancelled = true;
+    };
+  }, [session]);
 
   const handleToggleCollectrImport = async () => {
     if (showImportFromCollectr === null || isSavingSetting) return;
