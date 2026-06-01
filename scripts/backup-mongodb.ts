@@ -12,9 +12,15 @@ function getTimestamp(): string {
 
 async function runBackup() {
   const { default: connectDB } = await import("../lib/mongodb");
-  const { OwnedCard, PokemonCard, Set } = await import("../database");
+  const { Config, OwnedCard, PokemonCard, Set } = await import("../database");
 
   await connectDB();
+
+  const database = mongoose.connection.db;
+
+  if (!database) {
+    throw new Error("Database connection is not available");
+  }
 
   const timestamp = getTimestamp();
   const backupDir = path.resolve(
@@ -27,18 +33,27 @@ async function runBackup() {
 
   const collections = [
     {
+      name: "Config",
+      fileName: "config.json",
+      collectionName: Config.collection.collectionName,
+      fetch: async () => Config.find().sort({ _id: 1 }).lean(),
+    },
+    {
       name: "OwnedCard",
       fileName: "owned-cards.json",
+      collectionName: OwnedCard.collection.collectionName,
       fetch: async () => OwnedCard.find().sort({ _id: 1 }).lean(),
     },
     {
       name: "PokemonCard",
       fileName: "pokemon-cards.json",
+      collectionName: PokemonCard.collection.collectionName,
       fetch: async () => PokemonCard.find().sort({ _id: 1 }).lean(),
     },
     {
       name: "Set",
       fileName: "sets.json",
+      collectionName: Set.collection.collectionName,
       fetch: async () => Set.find().sort({ _id: 1 }).lean(),
     },
   ] as const;
@@ -47,7 +62,11 @@ async function runBackup() {
     [];
 
   for (const collection of collections) {
-    const documents = await collection.fetch();
+    const collectionExists = await database
+      .listCollections({ name: collection.collectionName }, { nameOnly: true })
+      .hasNext();
+
+    const documents = collectionExists ? await collection.fetch() : [];
     const filePath = path.join(backupDir, collection.fileName);
 
     await writeFile(
@@ -71,7 +90,15 @@ async function runBackup() {
       file: collection.fileName,
     });
 
-    console.log(`Backed up ${collection.name}: ${documents.length} documents`);
+    if (collectionExists) {
+      console.log(
+        `Backed up ${collection.name}: ${documents.length} documents`,
+      );
+    } else {
+      console.log(
+        `Skipped ${collection.name}: collection ${collection.collectionName} does not exist yet`,
+      );
+    }
   }
 
   await writeFile(
