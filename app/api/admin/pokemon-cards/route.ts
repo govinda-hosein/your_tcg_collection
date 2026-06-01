@@ -13,6 +13,10 @@ type CreatePokemonCardPayload = {
   rarity?: string;
 };
 
+type DeletePokemonCardPayload = {
+  id?: string;
+};
+
 function generateBaseSetId(name: string): string {
   const normalized = name
     .trim()
@@ -165,6 +169,55 @@ export async function POST(request: NextRequest) {
 
     const message =
       error instanceof Error ? error.message : "Failed to create pokemon card";
+
+    return NextResponse.json({ error: message }, { status: 400 });
+  }
+}
+
+export async function DELETE(request: NextRequest) {
+  try {
+    const payload = (await request.json()) as DeletePokemonCardPayload;
+    const cardId = payload.id?.trim();
+
+    if (!cardId) {
+      return NextResponse.json({ error: "id is required" }, { status: 400 });
+    }
+
+    await connectDB();
+
+    const deletedCard = await PokemonCard.findOneAndDelete({ id: cardId })
+      .select("id name number setId")
+      .lean<{
+        id: string;
+        name: string;
+        number: string;
+        setId: string;
+      } | null>();
+
+    if (!deletedCard) {
+      return NextResponse.json(
+        { error: `Pokemon card not found with id: ${cardId}` },
+        { status: 404 },
+      );
+    }
+
+    return NextResponse.json(
+      {
+        message: "Pokemon card deleted",
+        payload: {
+          id: deletedCard.id,
+          name: deletedCard.name,
+          number: deletedCard.number,
+          setId: deletedCard.setId,
+        },
+      },
+      { status: 200 },
+    );
+  } catch (error) {
+    console.error("Failed to delete pokemon card:", error);
+
+    const message =
+      error instanceof Error ? error.message : "Failed to delete pokemon card";
 
     return NextResponse.json({ error: message }, { status: 400 });
   }

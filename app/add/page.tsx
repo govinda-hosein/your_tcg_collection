@@ -1,6 +1,6 @@
 "use client";
 
-import { ArrowLeft, Loader2, Search, X, ZoomIn } from "lucide-react";
+import { ArrowLeft, Loader2, Search, Trash2, X, ZoomIn } from "lucide-react";
 
 import { AppToast } from "@/components/AppToast";
 import { CardSearchResult } from "@/components/CardSearchResult";
@@ -40,6 +40,9 @@ export default function AddCardPage() {
   const { isEnabled } = useFeatureFlags();
   const [isCreateCardModalOpen, setIsCreateCardModalOpen] = useState(false);
   const [isCreatingCard, setIsCreatingCard] = useState(false);
+  const [showDeleteSelectedCardConfirm, setShowDeleteSelectedCardConfirm] =
+    useState(false);
+  const [isDeletingSelectedCard, setIsDeletingSelectedCard] = useState(false);
   const [createCardForm, setCreateCardForm] = useState<CreateCardFormData>(
     INITIAL_CREATE_CARD_FORM,
   );
@@ -68,6 +71,7 @@ export default function AddCardPage() {
   const showImportFromCollectr = isEnabled(FEATURE_FLAG_NAMES[0]);
   const showDeleteAllInventory = isEnabled("show_delete_all_inventory");
   const showCreateCard = isEnabled("show_create_card");
+  const showDeletePokemonCard = isEnabled("show_delete_pokemon_card");
 
   const getNormalizedQuantity = () => {
     const parsed = Number.parseInt(quantityInput, 10);
@@ -196,6 +200,48 @@ export default function AddCardPage() {
       showToast("Create card request failed");
     } finally {
       setIsCreatingCard(false);
+    }
+  };
+
+  const handleDeleteSelectedCard = async () => {
+    if (!selectedCard) {
+      return;
+    }
+
+    const cardId = selectedCard.id?.trim() ?? "";
+
+    if (!cardId) {
+      showToast("Selected card is missing an id");
+      return;
+    }
+
+    setIsDeletingSelectedCard(true);
+    try {
+      const response = await fetch(withBasePath("/api/admin/pokemon-cards"), {
+        method: "DELETE",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          id: cardId,
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = (await response.json()) as { error?: string };
+        showToast(errorData.error ?? "Delete card request failed");
+        return;
+      }
+
+      showToast("Pokemon card deleted");
+      setSelectedCard(null);
+      setQuantityInput("1");
+      setShowDeleteSelectedCardConfirm(false);
+    } catch (error) {
+      console.error("Delete card request failed", error);
+      showToast("Delete card request failed");
+    } finally {
+      setIsDeletingSelectedCard(false);
     }
   };
 
@@ -443,12 +489,25 @@ export default function AddCardPage() {
             <div className="bg-linear-to-r from-accent to-primary h-3" />
 
             <div className="p-4">
-              <h2
-                className="text-2xl mb-6"
-                style={{ fontFamily: "var(--font-display)" }}
-              >
-                SELECTED CARD
-              </h2>
+              <div className="mb-6 flex items-center justify-between gap-3">
+                <h2
+                  className="text-2xl"
+                  style={{ fontFamily: "var(--font-display)" }}
+                >
+                  SELECTED CARD
+                </h2>
+
+                {showDeletePokemonCard ? (
+                  <button
+                    type="button"
+                    onClick={() => setShowDeleteSelectedCardConfirm(true)}
+                    className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-destructive/40 text-destructive hover:bg-destructive/10 transition-colors"
+                    aria-label="Delete selected Pokemon card"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </button>
+                ) : null}
+              </div>
 
               {/* Card Preview */}
               <div className="bg-linear-to-br from-purple-100 to-pink-100 rounded-xl p-2 mb-6 border-2 border-border">
@@ -683,6 +742,41 @@ export default function AddCardPage() {
           onSubmit={handleCreateCard}
         />
       )}
+
+      {selectedCard && showDeleteSelectedCardConfirm ? (
+        <div className="fixed inset-0 z-60 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+          <div className="w-full max-w-sm rounded-2xl border-2 border-border bg-card p-6 shadow-xl">
+            <h2
+              className="text-lg font-semibold mb-2"
+              style={{ fontFamily: "var(--font-display)" }}
+            >
+              Delete Pokemon Card?
+            </h2>
+            <p className="text-sm text-muted-foreground mb-5">
+              Are you sure you want to delete {selectedCard.name} from Pokemon
+              cards?
+            </p>
+            <div className="flex gap-3">
+              <button
+                type="button"
+                onClick={handleDeleteSelectedCard}
+                disabled={isDeletingSelectedCard}
+                className="flex-1 rounded-lg bg-destructive px-4 py-2 text-sm font-medium text-white hover:opacity-90 transition-opacity disabled:opacity-60"
+              >
+                {isDeletingSelectedCard ? "Deleting..." : "Yes, Delete"}
+              </button>
+              <button
+                type="button"
+                onClick={() => setShowDeleteSelectedCardConfirm(false)}
+                disabled={isDeletingSelectedCard}
+                className="flex-1 rounded-lg border border-border px-4 py-2 text-sm hover:bg-muted transition-colors disabled:opacity-60"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
 
       <style>{`
         @keyframes slideInUp {
