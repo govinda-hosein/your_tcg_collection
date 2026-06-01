@@ -6,7 +6,6 @@ import {
   LogOut,
   Plus,
   ShoppingBasket,
-  Trash2,
 } from "lucide-react";
 import { getSession, signOut } from "next-auth/react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
@@ -19,7 +18,6 @@ import { RaritySelect } from "@/components/RaritySelect";
 import { SearchBar } from "@/components/SearchBar";
 import { SetSelect } from "@/components/SetSelect";
 import type { OwnedCardViewModel } from "@/database/ownedCard.model";
-import { useFeatureFlags } from "@/hooks/useFeatureFlags";
 import { useToast } from "@/hooks/useToast";
 import { withBasePath } from "@/lib/url";
 import Link from "next/link";
@@ -61,10 +59,6 @@ function HomeContent() {
   });
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
-  const [showDeleteAllConfirm, setShowDeleteAllConfirm] = useState(false);
-  const [isDeletingAll, setIsDeletingAll] = useState(false);
-  const { isEnabled } = useFeatureFlags();
-  const showDeleteAllInventory = isEnabled("show_delete_all_inventory");
   const { toastMessage, showToast } = useToast(1700);
   const listTopRef = useRef<HTMLDivElement | null>(null);
   const shouldScrollToListRef = useRef(false);
@@ -404,39 +398,6 @@ function HomeContent() {
     }
   };
 
-  const handleDeleteAllInventory = async () => {
-    setIsDeletingAll(true);
-    try {
-      const response = await fetch(
-        withBasePath("/api/admin/owned-cards/delete-all"),
-        {
-          method: "DELETE",
-        },
-      );
-
-      if (!response.ok) {
-        const errorData = (await response.json()) as { error?: string };
-        showToast(errorData.error ?? "Failed to delete all inventory");
-        return;
-      }
-
-      const data = (await response.json()) as { deletedCount?: number };
-      const deletedCount = data.deletedCount ?? 0;
-
-      setCards([]);
-      setStats({ totalQuantity: 0, artists: [], sets: [] });
-      setShowDeleteAllConfirm(false);
-      showToast(
-        `Deleted ${deletedCount} inventory entr${deletedCount === 1 ? "y" : "ies"}`,
-      );
-    } catch (error) {
-      console.error("Error deleting all inventory:", error);
-      showToast("Failed to delete all inventory");
-    } finally {
-      setIsDeletingAll(false);
-    }
-  };
-
   if (isLoading) {
     return <LoadingState />;
   }
@@ -526,20 +487,6 @@ function HomeContent() {
                 ADD CARD
               </Link>
             ) : null}
-
-            {isLoggedIn && showDeleteAllInventory ? (
-              <button
-                type="button"
-                onClick={() => setShowDeleteAllConfirm(true)}
-                className="px-6 py-3 rounded-lg border-2 border-destructive/60 bg-destructive/10 text-destructive
-                     flex items-center gap-2 shadow-md hover:bg-destructive/20
-                     hover:-translate-y-0.5 transition-all duration-200"
-                style={{ fontFamily: "var(--font-display)" }}
-              >
-                <Trash2 className="w-5 h-5" />
-                Delete All Inventory
-              </button>
-            ) : null}
           </div>
         </div>
 
@@ -609,41 +556,6 @@ function HomeContent() {
           </div>
         ) : null}
       </div>
-
-      {showDeleteAllConfirm && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
-          <div className="w-full max-w-md rounded-2xl border-2 border-border bg-card p-6 shadow-xl">
-            <h2
-              className="text-lg font-semibold mb-2"
-              style={{ fontFamily: "var(--font-display)" }}
-            >
-              Delete All Inventory?
-            </h2>
-            <p className="text-sm text-muted-foreground mb-5">
-              This will permanently delete all entries in your inventory. This
-              action cannot be undone.
-            </p>
-            <div className="flex gap-3">
-              <button
-                type="button"
-                onClick={handleDeleteAllInventory}
-                disabled={isDeletingAll}
-                className="flex-1 rounded-lg bg-destructive px-4 py-2 text-sm font-medium text-white hover:opacity-90 transition-opacity disabled:opacity-60"
-              >
-                {isDeletingAll ? "Deleting..." : "Yes, Delete All"}
-              </button>
-              <button
-                type="button"
-                onClick={() => setShowDeleteAllConfirm(false)}
-                disabled={isDeletingAll}
-                className="flex-1 rounded-lg border border-border px-4 py-2 text-sm hover:bg-muted transition-colors disabled:opacity-60"
-              >
-                Cancel
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
 
       <AppToast message={toastMessage} variant="success" />
     </div>

@@ -1,10 +1,19 @@
 "use client";
 
-import { ArrowLeft, LogIn, LogOut, Settings, ShieldCheck } from "lucide-react";
+import {
+  ArrowLeft,
+  LogIn,
+  LogOut,
+  Settings,
+  ShieldCheck,
+  Trash2,
+} from "lucide-react";
 import { signIn, signOut, useSession } from "next-auth/react";
 import { Suspense, useEffect, useState } from "react";
 
+import { AppToast } from "@/components/AppToast";
 import { useFeatureFlags } from "@/hooks/useFeatureFlags";
+import { useToast } from "@/hooks/useToast";
 import { FEATURE_FLAG_NAMES } from "@/lib/featureFlags.config";
 import { withBasePath } from "@/lib/url";
 import Link from "next/link";
@@ -36,8 +45,11 @@ function AdminLoginContentInner() {
   const [showDeletePokemonCard, setShowDeletePokemonCard] = useState<
     boolean | null
   >(null);
+  const [showDeleteAllConfirm, setShowDeleteAllConfirm] = useState(false);
+  const [isDeletingAll, setIsDeletingAll] = useState(false);
   const [isSavingSetting, setIsSavingSetting] = useState(false);
   const [settingsError, setSettingsError] = useState<string | null>(null);
+  const { toastMessage, showToast } = useToast(1700);
 
   useEffect(() => {
     if (!session) {
@@ -254,6 +266,37 @@ function AdminLoginContentInner() {
       setSettingsError("Could not save setting. Please try again.");
     } finally {
       setIsSavingSetting(false);
+    }
+  };
+
+  const handleDeleteAllInventory = async () => {
+    setIsDeletingAll(true);
+    try {
+      const response = await fetch(
+        withBasePath("/api/admin/owned-cards/delete-all"),
+        {
+          method: "DELETE",
+        },
+      );
+
+      if (!response.ok) {
+        const errorData = (await response.json()) as { error?: string };
+        showToast(errorData.error ?? "Failed to delete all inventory");
+        return;
+      }
+
+      const data = (await response.json()) as { deletedCount?: number };
+      const deletedCount = data.deletedCount ?? 0;
+
+      setShowDeleteAllConfirm(false);
+      showToast(
+        `Deleted ${deletedCount} inventory entr${deletedCount === 1 ? "y" : "ies"}`,
+      );
+    } catch (error) {
+      console.error("Error deleting all inventory:", error);
+      showToast("Failed to delete all inventory");
+    } finally {
+      setIsDeletingAll(false);
     }
   };
 
@@ -538,6 +581,31 @@ function AdminLoginContentInner() {
                     </div>
                   ) : null}
                 </div>
+
+                {showDeleteAllInventory ? (
+                  <div className="rounded-lg border border-destructive/30 bg-destructive/5 p-3">
+                    <div className="flex items-center justify-between gap-3">
+                      <div>
+                        <p className="text-sm font-medium text-destructive">
+                          Delete All Inventory
+                        </p>
+                        <p className="mt-0.5 text-xs text-muted-foreground">
+                          Permanently removes every owned-card inventory entry.
+                        </p>
+                      </div>
+
+                      <button
+                        type="button"
+                        onClick={() => setShowDeleteAllConfirm(true)}
+                        className="inline-flex items-center gap-2 rounded-lg border border-destructive/60 bg-destructive/10 px-3 py-2 text-sm text-destructive hover:bg-destructive/20 transition-colors"
+                        style={{ fontFamily: "var(--font-display)" }}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                        Delete All
+                      </button>
+                    </div>
+                  </div>
+                ) : null}
               </div>
 
               <button
@@ -567,6 +635,43 @@ function AdminLoginContentInner() {
           )}
         </div>
       </div>
+
+      {showDeleteAllConfirm ? (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+          <div className="w-full max-w-md rounded-2xl border-2 border-border bg-card p-6 shadow-xl">
+            <h2
+              className="text-lg font-semibold mb-2"
+              style={{ fontFamily: "var(--font-display)" }}
+            >
+              Delete All Inventory?
+            </h2>
+            <p className="text-sm text-muted-foreground mb-5">
+              This will permanently delete all entries in your inventory. This
+              action cannot be undone.
+            </p>
+            <div className="flex gap-3">
+              <button
+                type="button"
+                onClick={handleDeleteAllInventory}
+                disabled={isDeletingAll}
+                className="flex-1 rounded-lg bg-destructive px-4 py-2 text-sm font-medium text-white hover:opacity-90 transition-opacity disabled:opacity-60"
+              >
+                {isDeletingAll ? "Deleting..." : "Yes, Delete All"}
+              </button>
+              <button
+                type="button"
+                onClick={() => setShowDeleteAllConfirm(false)}
+                disabled={isDeletingAll}
+                className="flex-1 rounded-lg border border-border px-4 py-2 text-sm hover:bg-muted transition-colors disabled:opacity-60"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
+
+      <AppToast message={toastMessage} variant="success" />
     </main>
   );
 }
