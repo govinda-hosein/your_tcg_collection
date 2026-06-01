@@ -21,6 +21,10 @@ const seedConfig: ConfigSeedInput[] = [
     name: "show_delete_all_inventory",
     value: "false",
   },
+  {
+    name: "show_card_condition",
+    value: "false",
+  },
 ];
 
 async function runSeed() {

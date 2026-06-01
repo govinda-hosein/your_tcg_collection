@@ -42,6 +42,7 @@ const typeColors: Record<string, string> = {
 export function CardItem({ card, onClick, index, onBasketAdd }: CardItemProps) {
   const { isEnabled } = useFeatureFlags();
   const showPrice = isEnabled("show_price");
+  const showCardCondition = isEnabled("show_card_condition");
   const hasPrice = card.price !== null && card.price !== undefined;
   const pokemonCard = card.card;
   const rarityGradient =
@@ -205,6 +206,18 @@ export function CardItem({ card, onClick, index, onBasketAdd }: CardItemProps) {
                             px-2 py-1 rounded-full text-xs font-bold"
               >
                 {hasPrice ? `$${card.price.toFixed(2)}` : "$1"}
+              </div>
+            </div>
+          )}
+
+          {showCardCondition && (
+            <div className="flex items-center justify-between text-xs text-muted-foreground mt-2">
+              <span>Condition</span>
+              <div
+                className="bg-slate-700 text-white
+                            px-2 py-1 rounded-full text-xs font-bold"
+              >
+                {card.cardCondition || "Mint"}
               </div>
             </div>
           )}

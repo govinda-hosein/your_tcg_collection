@@ -13,6 +13,7 @@ import { useSearchParams } from "next/navigation";
 const COLLECTR_IMPORT_CONFIG_NAME = FEATURE_FLAG_NAMES[0];
 const SHOW_PRICE_CONFIG_NAME = FEATURE_FLAG_NAMES[1];
 const SHOW_DELETE_ALL_INVENTORY_CONFIG_NAME = FEATURE_FLAG_NAMES[2];
+const SHOW_CARD_CONDITION_CONFIG_NAME = FEATURE_FLAG_NAMES[3];
 
 function AdminLoginContentInner() {
   const { data: session } = useSession();
@@ -26,6 +27,9 @@ function AdminLoginContentInner() {
   const [showDeleteAllInventory, setShowDeleteAllInventory] = useState<
     boolean | null
   >(null);
+  const [showCardCondition, setShowCardCondition] = useState<boolean | null>(
+    null,
+  );
   const [isSavingSetting, setIsSavingSetting] = useState(false);
   const [settingsError, setSettingsError] = useState<string | null>(null);
 
@@ -34,6 +38,7 @@ function AdminLoginContentInner() {
       setShowImportFromCollectr(null);
       setShowPrice(null);
       setShowDeleteAllInventory(null);
+      setShowCardCondition(null);
       setSettingsError(null);
       return;
     }
@@ -41,6 +46,7 @@ function AdminLoginContentInner() {
     setShowImportFromCollectr(isEnabled(COLLECTR_IMPORT_CONFIG_NAME));
     setShowPrice(isEnabled(SHOW_PRICE_CONFIG_NAME));
     setShowDeleteAllInventory(isEnabled(SHOW_DELETE_ALL_INVENTORY_CONFIG_NAME));
+    setShowCardCondition(isEnabled(SHOW_CARD_CONDITION_CONFIG_NAME));
   }, [session, isEnabled]);
 
   const handleToggleCollectrImport = async () => {
@@ -136,6 +142,39 @@ function AdminLoginContentInner() {
       setShowDeleteAllInventory(!!data.enabled);
     } catch {
       setShowDeleteAllInventory(!nextEnabled);
+      setSettingsError("Could not save setting. Please try again.");
+    } finally {
+      setIsSavingSetting(false);
+    }
+  };
+
+  const handleToggleShowCardCondition = async () => {
+    if (showCardCondition === null || isSavingSetting) return;
+
+    setSettingsError(null);
+    setIsSavingSetting(true);
+
+    const nextEnabled = !showCardCondition;
+    setShowCardCondition(nextEnabled);
+
+    try {
+      const response = await fetch(withBasePath("/api/admin/config"), {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: SHOW_CARD_CONDITION_CONFIG_NAME,
+          enabled: nextEnabled,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to save settings");
+      }
+
+      const data = (await response.json()) as { enabled?: boolean };
+      setShowCardCondition(!!data.enabled);
+    } catch {
+      setShowCardCondition(!nextEnabled);
       setSettingsError("Could not save setting. Please try again.");
     } finally {
       setIsSavingSetting(false);
@@ -309,6 +348,39 @@ function AdminLoginContentInner() {
                           showDeleteAllInventory
                             ? "translate-x-6"
                             : "translate-x-1"
+                        }`}
+                      />
+                    </button>
+                  </div>
+
+                  {settingsError ? (
+                    <div className="mt-2 rounded-md border border-destructive/30 bg-destructive/10 px-2 py-1.5 text-xs text-destructive">
+                      {settingsError}
+                    </div>
+                  ) : null}
+                </div>
+
+                <div className="rounded-lg border border-border bg-input-background/50 p-3">
+                  <div className="flex items-center justify-between gap-3">
+                    <div>
+                      <p className="text-sm font-medium">Show Card Condition</p>
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={handleToggleShowCardCondition}
+                      disabled={isSavingSetting}
+                      aria-label="Toggle Show Card Condition setting"
+                      aria-pressed={!!showCardCondition}
+                      className={`relative inline-flex h-7 w-12 items-center rounded-full border transition-colors disabled:opacity-60 disabled:cursor-not-allowed ${
+                        showCardCondition
+                          ? "bg-primary border-primary/80"
+                          : "bg-muted border-border"
+                      }`}
+                    >
+                      <span
+                        className={`inline-block h-5 w-5 transform rounded-full bg-white shadow transition-transform ${
+                          showCardCondition ? "translate-x-6" : "translate-x-1"
                         }`}
                       />
                     </button>
