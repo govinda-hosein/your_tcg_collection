@@ -200,7 +200,7 @@ export function CardItem({ card, onClick, index, onBasketAdd }: CardItemProps) {
           </div>
 
           {showPrice && (
-            <div className="flex items-center justify-between text-xs text-muted-foreground mt-2">
+            <div className="mt-2 flex flex-col gap-1 text-xs text-muted-foreground sm:flex-row sm:items-center sm:justify-between">
               <span>Price</span>
               <div
                 className="bg-emerald-700 text-white
@@ -212,7 +212,7 @@ export function CardItem({ card, onClick, index, onBasketAdd }: CardItemProps) {
           )}
 
           {showCardCondition && (
-            <div className="flex items-center justify-between text-xs text-muted-foreground mt-2">
+            <div className="mt-2 flex flex-col gap-1 text-xs text-muted-foreground sm:flex-row sm:items-center sm:justify-between">
               <span>Condition</span>
               <div
                 className="bg-slate-700 text-white
