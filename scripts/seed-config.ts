@@ -25,6 +25,10 @@ const seedConfig: ConfigSeedInput[] = [
     name: "show_card_condition",
     value: "false",
   },
+  {
+    name: "show_create_card",
+    value: "false",
+  },
 ];
 
 async function runSeed() {
