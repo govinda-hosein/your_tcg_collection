@@ -13,6 +13,10 @@ const seedConfig: ConfigSeedInput[] = [
     name: "show_import_from_collectr",
     value: "false",
   },
+  {
+    name: "show_price",
+    value: "false",
+  },
 ];
 
 async function runSeed() {

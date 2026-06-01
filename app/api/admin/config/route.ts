@@ -43,7 +43,7 @@ export async function PATCH(request: NextRequest) {
   const updatedConfig = await Config.findOneAndUpdate(
     { name },
     { $set: { name, value: nextValue } },
-    { upsert: true, new: true, setDefaultsOnInsert: true },
+    { upsert: true, returnDocument: "after", setDefaultsOnInsert: true },
   )
     .select("name value")
     .lean<{ name: string; value: string } | null>();
