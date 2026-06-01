@@ -1,10 +1,10 @@
+import { CARD_CONDITIONS, RARITY_COLORS } from "@/lib/constants";
 import { Edit2, Save, Trash2, X } from "lucide-react";
+import { useEffect, useState } from "react";
 
 import type { OwnedCardViewModel } from "@/database/ownedCard.model";
-import { CARD_CONDITIONS, RARITY_COLORS } from "@/lib/constants";
 import { useSession } from "next-auth/react";
 import Image from "next/image";
-import { useEffect, useState } from "react";
 
 interface CardDetailModalProps {
   card: OwnedCardViewModel;
@@ -35,26 +35,15 @@ export function CardDetailModal({
   const pokemonCard = card.card;
 
   useEffect(() => {
-    const scrollY = window.scrollY;
     const originalHtmlOverflow = document.documentElement.style.overflow;
     const originalBodyOverflow = document.body.style.overflow;
-    const originalBodyPosition = document.body.style.position;
-    const originalBodyTop = document.body.style.top;
-    const originalBodyWidth = document.body.style.width;
 
     document.documentElement.style.overflow = "hidden";
     document.body.style.overflow = "hidden";
-    document.body.style.position = "fixed";
-    document.body.style.top = `-${scrollY}px`;
-    document.body.style.width = "100%";
 
     return () => {
       document.documentElement.style.overflow = originalHtmlOverflow;
       document.body.style.overflow = originalBodyOverflow;
-      document.body.style.position = originalBodyPosition;
-      document.body.style.top = originalBodyTop;
-      document.body.style.width = originalBodyWidth;
-      window.scrollTo(0, scrollY);
     };
   }, []);
 
@@ -97,13 +86,14 @@ export function CardDetailModal({
 
   const rarityGradient =
     RARITY_COLORS[pokemonCard?.rarity ?? ""] || "from-gray-300 to-gray-200";
+  const hasPrice = card.price !== null && card.price !== undefined;
 
   const { data: session } = useSession();
   const isAdmin = !!session;
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-3 md:p-6"
+      className="fixed inset-0 z-100 flex items-center justify-center p-3 md:p-6"
       onClick={onClose}
     >
       {/* Backdrop */}
@@ -196,16 +186,16 @@ export function CardDetailModal({
 
                     <div className="flex items-center justify-between py-2 border-b border-border">
                       <span className="text-muted-foreground">Price</span>
-                      <span className="font-medium">
-                        ${Number(card.price ?? 1).toFixed(2)}
-                      </span>
+                      <div className="rounded-full bg-emerald-700 px-2 py-1 text-xs font-bold text-white">
+                        {hasPrice ? `$${card.price.toFixed(2)}` : "$1"}
+                      </div>
                     </div>
 
                     <div className="flex items-center justify-between py-2 border-b border-border">
                       <span className="text-muted-foreground">Condition</span>
-                      <span className="font-medium">
+                      <div className="rounded-full bg-slate-700 px-2 py-1 text-xs font-bold text-white">
                         {card.cardCondition || "Mint"}
-                      </span>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -351,7 +341,7 @@ export function CardDetailModal({
 
       {showDeleteConfirm && (
         <div
-          className="fixed inset-0 z-60 flex items-center justify-center p-4"
+          className="fixed inset-0 z-110 flex items-center justify-center p-4"
           onClick={(e) => {
             e.stopPropagation();
             setShowDeleteConfirm(false);
