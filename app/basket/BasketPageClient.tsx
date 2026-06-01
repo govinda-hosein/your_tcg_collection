@@ -54,6 +54,7 @@ export function BasketPageClient() {
   const isAdmin = !!session;
   const { isEnabled } = useFeatureFlags();
   const showPrice = isEnabled("show_price");
+  const showCardCondition = isEnabled("show_card_condition");
   const totalPrice = items.reduce(
     (sum, item) => sum + (item.price ?? 1) * item.quantity,
     0,
@@ -119,6 +120,7 @@ export function BasketPageClient() {
                 setName: owned.card.set?.name ?? "",
                 rarity: owned.card.rarity ?? "",
                 price: owned.price ?? 1,
+                cardCondition: owned.cardCondition ?? "Mint",
                 quantity: clampedQty,
                 maxQuantity: owned.quantity,
               },
@@ -409,16 +411,24 @@ export function BasketPageClient() {
                           <p className="text-sm text-muted-foreground truncate">
                             {item.setName || "Unknown Set"}
                           </p>
-                          {item.rarity ? (
-                            <div className="mt-1.5">
-                              <span
-                                className={`inline-flex text-xs px-2 py-0.5 rounded-full bg-linear-to-r ${
-                                  RARITY_COLORS[item.rarity] ||
-                                  "from-gray-300 to-gray-200"
-                                } text-white font-medium`}
-                              >
-                                {item.rarity}
-                              </span>
+                          {item.rarity || showCardCondition ? (
+                            <div className="mt-1.5 flex items-center gap-2">
+                              {item.rarity ? (
+                                <span
+                                  className={`inline-flex text-xs px-2 py-0.5 rounded-full bg-linear-to-r ${
+                                    RARITY_COLORS[item.rarity] ||
+                                    "from-gray-300 to-gray-200"
+                                  } text-white font-medium`}
+                                >
+                                  {item.rarity}
+                                </span>
+                              ) : null}
+
+                              {showCardCondition ? (
+                                <span className="rounded-full border border-slate-300 bg-slate-100 px-2.5 py-0.5 text-xs font-semibold text-slate-900">
+                                  {item.cardCondition || "Mint"}
+                                </span>
+                              ) : null}
                             </div>
                           ) : null}
                         </div>

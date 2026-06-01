@@ -78,6 +78,7 @@ export function CardItem({ card, onClick, index, onBasketAdd }: CardItemProps) {
         setName: pokemonCard?.set?.name || "",
         rarity: pokemonCard?.rarity || "",
         price: card.price ?? 1,
+        cardCondition: card.cardCondition || "Mint",
         maxQuantity: card.quantity,
       },
       basketQuantityToAdd,
