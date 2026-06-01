@@ -4,6 +4,10 @@ import { ArrowLeft, Loader2, Search, X, ZoomIn } from "lucide-react";
 
 import { AppToast } from "@/components/AppToast";
 import { CardSearchResult } from "@/components/CardSearchResult";
+import {
+  CreateCardModal,
+  type CreateCardFormData,
+} from "@/components/CreateCardModal";
 import type { PokemonCardViewModel } from "@/database";
 import { useFeatureFlags } from "@/hooks/useFeatureFlags";
 import { useToast } from "@/hooks/useToast";
@@ -22,9 +26,23 @@ type CollectrUnmatchedRow = {
   row: string[];
 };
 
+const INITIAL_CREATE_CARD_FORM: CreateCardFormData = {
+  name: "",
+  number: "",
+  artist: "",
+  image_url: "",
+  set: "",
+  rarity: "",
+};
+
 export default function AddCardPage() {
   const router = useRouter();
   const { isEnabled } = useFeatureFlags();
+  const [isCreateCardModalOpen, setIsCreateCardModalOpen] = useState(false);
+  const [isCreatingCard, setIsCreatingCard] = useState(false);
+  const [createCardForm, setCreateCardForm] = useState<CreateCardFormData>(
+    INITIAL_CREATE_CARD_FORM,
+  );
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState<PokemonCardViewModel[]>(
     [],
@@ -49,6 +67,7 @@ export default function AddCardPage() {
   const { toastMessage, showToast } = useToast(1700);
   const showImportFromCollectr = isEnabled(FEATURE_FLAG_NAMES[0]);
   const showDeleteAllInventory = isEnabled("show_delete_all_inventory");
+  const showCreateCard = isEnabled("show_create_card");
 
   const getNormalizedQuantity = () => {
     const parsed = Number.parseInt(quantityInput, 10);
@@ -138,6 +157,48 @@ export default function AddCardPage() {
     setDeleteAllInventoryFirst(false);
   };
 
+  const closeCreateCardModal = () => {
+    setIsCreateCardModalOpen(false);
+    setCreateCardForm(INITIAL_CREATE_CARD_FORM);
+  };
+
+  const handleCreateCard = async () => {
+    if (
+      !createCardForm.name.trim() ||
+      !createCardForm.number.trim() ||
+      !createCardForm.image_url.trim() ||
+      !createCardForm.set.trim()
+    ) {
+      showToast("Name, Number, Image URL, and Set are required");
+      return;
+    }
+
+    setIsCreatingCard(true);
+    try {
+      const response = await fetch(withBasePath("/api/admin/pokemon-cards"), {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(createCardForm),
+      });
+
+      if (!response.ok) {
+        const errorData = (await response.json()) as { error?: string };
+        showToast(errorData.error ?? "Create card request failed");
+        return;
+      }
+
+      showToast("Create card payload sent");
+      closeCreateCardModal();
+    } catch (error) {
+      console.error("Create card request failed", error);
+      showToast("Create card request failed");
+    } finally {
+      setIsCreatingCard(false);
+    }
+  };
+
   const handleCollectrImport = async () => {
     if (!importFile) {
       showToast("Select a CSV file first");
@@ -208,7 +269,7 @@ export default function AddCardPage() {
         </button>
 
         {/* Header */}
-        <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+        <div className="mb-2 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
           <div>
             <h1
               className="text-5xl mb-2 tracking-tight"
@@ -233,6 +294,19 @@ export default function AddCardPage() {
             </button>
           ) : null}
         </div>
+
+        {showCreateCard ? (
+          <div className="mb-2">
+            <button
+              type="button"
+              onClick={() => setIsCreateCardModalOpen(true)}
+              className="inline-flex items-center justify-center rounded-lg border-2 border-border bg-primary/10 px-4 py-2.5 text-sm font-medium hover:bg-primary/20 transition-colors"
+              style={{ fontFamily: "var(--font-display)" }}
+            >
+              Create Card
+            </button>
+          </div>
+        ) : null}
 
         {collectrAddedCount !== null && (
           <div className="mb-6 rounded-2xl border-4 border-emerald-700 bg-emerald-100 p-4 text-emerald-950 shadow-lg">
@@ -595,6 +669,19 @@ export default function AddCardPage() {
             </div>
           </div>
         </div>
+      )}
+
+      {isCreateCardModalOpen && (
+        <CreateCardModal
+          isOpen={isCreateCardModalOpen}
+          formData={createCardForm}
+          isSubmitting={isCreatingCard}
+          onClose={closeCreateCardModal}
+          onFieldChange={(field, value) =>
+            setCreateCardForm((prev) => ({ ...prev, [field]: value }))
+          }
+          onSubmit={handleCreateCard}
+        />
       )}
 
       <style>{`
