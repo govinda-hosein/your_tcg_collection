@@ -252,8 +252,7 @@ export default function AddCardPage() {
                       {item.productName || "Unknown Product"}
                     </div>
                     <div className="text-xs text-amber-900/80">
-                      {item.set || "Unknown Set"} -{" "}
-                      {item.cardNumber || "Unknown Number"} - Built card id:{" "}
+                      {item.set || "Unknown Set"} - Built card id:{" "}
                       {item.cardId || "N/A"}
                     </div>
                   </li>

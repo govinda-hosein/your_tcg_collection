@@ -1,5 +1,6 @@
 import { PokemonCard, Set } from "@/database";
 
+import { COLLECTR_SET_MAP } from "@/lib/constants";
 import connectDB from "@/lib/mongodb";
 import { NextResponse } from "next/server";
 
@@ -118,7 +119,8 @@ export async function POST(request: Request) {
       const productNameValue = row[productNameColumnIndex] ?? "";
       const cardNumberValue = row[cardNumberColumnIndex] ?? "";
       const cardNumberFirstPart = parseCardNumber(cardNumberValue);
-      const matchingSet = await Set.findOne({ name: setValue })
+      const mappedSetName = COLLECTR_SET_MAP[setValue] ?? setValue;
+      const matchingSet = await Set.findOne({ name: mappedSetName })
         .select({ _id: 0, id: 1 })
         .lean();
       const cardId = `${matchingSet?.id ?? null}-${cardNumberFirstPart}`;

@@ -9,3 +9,11 @@ export const RARITY_COLORS: Readonly<Record<string, string>> = {
   "Ultra Rare": "from-yellow-400 to-orange-400",
   "Special Illustration Rare": "from-fuchsia-500 to-rose-500",
 };
+
+export const COLLECTR_SET_MAP: Record<string, string> = {
+  "Crown Zenith: Galarian Gallery": "Crown Zenith Galarian Gallery",
+  "SV: 151": "151",
+  "Scarlet & Violet Base Set": "Scarlet & Violet",
+  "Sword & Shield Base Set": "Sword & Shield",
+  "Sword & Shield Promo": "SWSH Black Star Promos",
+};
