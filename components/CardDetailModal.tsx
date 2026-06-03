@@ -3,6 +3,7 @@ import { Edit2, Save, Trash2, X } from "lucide-react";
 import { useEffect, useState } from "react";
 
 import type { OwnedCardViewModel } from "@/database/ownedCard.model";
+import { useFeatureFlags } from "@/hooks/useFeatureFlags";
 import { useSession } from "next-auth/react";
 import Image from "next/image";
 
@@ -87,6 +88,9 @@ export function CardDetailModal({
   const rarityGradient =
     RARITY_COLORS[pokemonCard?.rarity ?? ""] || "from-gray-300 to-gray-200";
   const hasPrice = card.price !== null && card.price !== undefined;
+  const { isEnabled } = useFeatureFlags();
+  const showPriceFlag = isEnabled("show_price");
+  const showConditionFlag = isEnabled("show_card_condition");
 
   const { data: session } = useSession();
   const isAdmin = !!session;
@@ -184,19 +188,23 @@ export function CardDetailModal({
                       </span>
                     </div>
 
-                    <div className="flex items-center justify-between py-2 border-b border-border">
-                      <span className="text-muted-foreground">Price</span>
-                      <div className="rounded-full bg-emerald-700 px-2 py-1 text-xs font-bold text-white">
-                        {hasPrice ? `$${card.price.toFixed(2)}` : "$1"}
+                    {showPriceFlag && (
+                      <div className="flex items-center justify-between py-2 border-b border-border">
+                        <span className="text-muted-foreground">Price</span>
+                        <div className="rounded-full bg-emerald-700 px-2 py-1 text-xs font-bold text-white">
+                          {hasPrice ? `$${card.price.toFixed(2)}` : "$1"}
+                        </div>
                       </div>
-                    </div>
+                    )}
 
-                    <div className="flex items-center justify-between py-2 border-b border-border">
-                      <span className="text-muted-foreground">Condition</span>
-                      <div className="rounded-full bg-slate-700 px-2 py-1 text-xs font-bold text-white">
-                        {card.cardCondition || "Mint"}
+                    {showConditionFlag && (
+                      <div className="flex items-center justify-between py-2 border-b border-border">
+                        <span className="text-muted-foreground">Condition</span>
+                        <div className="rounded-full bg-slate-700 px-2 py-1 text-xs font-bold text-white">
+                          {card.cardCondition || "Mint"}
+                        </div>
                       </div>
-                    </div>
+                    )}
                   </div>
                 </div>
 
@@ -255,45 +263,49 @@ export function CardDetailModal({
                     />
                   </div>
 
-                  <div>
-                    <label className="block text-sm mb-1">Price</label>
-                    <input
-                      type="number"
-                      min="0"
-                      step="0.01"
-                      value={priceInput}
-                      onChange={(e) => setPriceInput(e.target.value)}
-                      onBlur={() =>
-                        setPriceInput(getNormalizedPrice().toFixed(2))
-                      }
-                      className="w-full px-4 py-2 bg-input-background border-2 border-border
-                               rounded-lg focus:outline-none focus:border-primary"
-                    />
-                  </div>
+                  {showPriceFlag && (
+                    <div>
+                      <label className="block text-sm mb-1">Price</label>
+                      <input
+                        type="number"
+                        min="0"
+                        step="0.01"
+                        value={priceInput}
+                        onChange={(e) => setPriceInput(e.target.value)}
+                        onBlur={() =>
+                          setPriceInput(getNormalizedPrice().toFixed(2))
+                        }
+                        className="w-full px-4 py-2 bg-input-background border-2 border-border
+                                 rounded-lg focus:outline-none focus:border-primary"
+                      />
+                    </div>
+                  )}
 
-                  <div>
-                    <label className="block text-sm mb-1">Condition</label>
-                    <select
-                      value={cardConditionInput}
-                      onChange={(e) => setCardConditionInput(e.target.value)}
-                      className="w-full px-4 py-2 bg-input-background border-2 border-border
-                               rounded-lg focus:outline-none focus:border-primary"
-                    >
-                      {!CARD_CONDITIONS.includes(
-                        cardConditionInput as (typeof CARD_CONDITIONS)[number],
-                      ) ? (
-                        <option value={cardConditionInput}>
-                          {cardConditionInput}
-                        </option>
-                      ) : null}
+                  {showConditionFlag && (
+                    <div>
+                      <label className="block text-sm mb-1">Condition</label>
+                      <select
+                        value={cardConditionInput}
+                        onChange={(e) => setCardConditionInput(e.target.value)}
+                        className="w-full px-4 py-2 bg-input-background border-2 border-border
+                                 rounded-lg focus:outline-none focus:border-primary"
+                      >
+                        {!CARD_CONDITIONS.includes(
+                          cardConditionInput as (typeof CARD_CONDITIONS)[number],
+                        ) ? (
+                          <option value={cardConditionInput}>
+                            {cardConditionInput}
+                          </option>
+                        ) : null}
 
-                      {CARD_CONDITIONS.map((condition) => (
-                        <option key={condition} value={condition}>
-                          {condition}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
+                        {CARD_CONDITIONS.map((condition) => (
+                          <option key={condition} value={condition}>
+                            {condition}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  )}
                 </div>
 
                 {/* Edit Actions */}
