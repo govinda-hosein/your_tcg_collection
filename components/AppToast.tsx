@@ -82,7 +82,7 @@ export function AppToast({
   return (
     <div className={`${positionClassName} z-50 pointer-events-none`}>
       <div
-        className={`rounded-lg border px-4 py-2 text-sm shadow-lg transition-all duration-200 ${
+        className={`rounded-lg border px-5 py-3 text-base shadow-lg transition-all duration-200 ${
           isVisible
             ? "translate-y-0 opacity-100 ease-out"
             : "translate-y-3 opacity-0 ease-in"

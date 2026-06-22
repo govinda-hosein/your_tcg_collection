@@ -32,6 +32,8 @@ export async function GET() {
           },
         },
         quantity: ownedCard.quantity,
+        price: ownedCard.price,
+        cardCondition: ownedCard.cardCondition,
       }))
       .sort((a, b) =>
         (a.card.number ?? "").localeCompare(b.card.number ?? "", undefined, {

@@ -1,32 +1,27 @@
+"use client";
+
 import { Check, ChevronDown } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 
-import { RARITY_COLORS } from "@/lib/constants";
+import { TYPE_COLORS } from "@/lib/constants";
 
-const DEFAULT_RARITY_GRADIENT = "from-gray-400 to-gray-300";
-
-interface RaritySelectProps {
+interface PokemonTypeSelectProps {
   value: string;
-  onChange: (value: string) => void;
-  rarities?: string[];
+  onChange: (type: string) => void;
 }
 
-export function RaritySelect({ value, onChange, rarities }: RaritySelectProps) {
+const POKEMON_TYPES = Object.keys(TYPE_COLORS);
+
+export function PokemonTypeSelect({ value, onChange }: PokemonTypeSelectProps) {
   const [isOpen, setIsOpen] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
-  // Compute the options list strictly from the rarities provided by the server.
-  // If no rarities are provided, render an empty list (only "All Rarities" will be shown).
-  const computedOptions = useMemo(() => {
-    if (!rarities || rarities.length === 0) return [];
 
-    return [...rarities]
-      .filter(Boolean)
-      .map((label) => ({
-        label,
-        gradient: RARITY_COLORS[label] ?? DEFAULT_RARITY_GRADIENT,
-      }))
-      .sort((a, b) => a.label.localeCompare(b.label));
-  }, [rarities]);
+  const computedOptions = useMemo(() => {
+    return POKEMON_TYPES.map((type) => ({
+      label: type,
+      color: TYPE_COLORS[type],
+    })).sort((a, b) => a.label.localeCompare(b.label));
+  }, []);
 
   const selectedOption = useMemo(
     () => computedOptions.find((option) => option.label === value),
@@ -57,13 +52,14 @@ export function RaritySelect({ value, onChange, rarities }: RaritySelectProps) {
       >
         <span className="flex items-center gap-2 min-w-0">
           {selectedOption ? (
-            <span
-              className={`h-3.5 w-3.5 rounded-full bg-linear-to-r ${selectedOption.gradient}`}
+            <div
+              className="h-3.5 w-3.5 rounded-full shrink-0"
+              style={{ backgroundColor: selectedOption.color }}
               aria-hidden="true"
             />
           ) : null}
           <span className="truncate">
-            {selectedOption?.label ?? "All Rarities"}
+            {selectedOption?.label ?? "All Types"}
           </span>
         </span>
         <ChevronDown
@@ -89,7 +85,7 @@ export function RaritySelect({ value, onChange, rarities }: RaritySelectProps) {
                          value === "" ? "bg-muted/40" : ""
                        }`}
           >
-            <span>All Rarities</span>
+            <span>All Types</span>
             {value === "" ? <Check className="h-4 w-4 text-primary" /> : null}
           </button>
 
@@ -110,8 +106,9 @@ export function RaritySelect({ value, onChange, rarities }: RaritySelectProps) {
                            }`}
               >
                 <span className="flex items-center gap-2 min-w-0">
-                  <span
-                    className={`h-3.5 w-3.5 shrink-0 rounded-full bg-linear-to-r ${option.gradient}`}
+                  <div
+                    className="h-3.5 w-3.5 shrink-0 rounded-full"
+                    style={{ backgroundColor: option.color }}
                     aria-hidden="true"
                   />
                   <span className="truncate">{option.label}</span>

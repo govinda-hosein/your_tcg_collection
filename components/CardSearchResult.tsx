@@ -23,9 +23,9 @@ const TYPE_ICON_PATHS: Record<string, string> = {
 };
 
 export function CardSearchResult({ card, onClick }: CardSearchResultProps) {
-  const rarityGradient =
-    RARITY_COLORS[card.rarity] || "from-gray-300 to-gray-200";
-  const isHolo = isHoloRarity(card.rarity);
+  const rarity = card.rarity ?? "";
+  const rarityGradient = RARITY_COLORS[rarity] || "from-gray-300 to-gray-200";
+  const isHolo = isHoloRarity(rarity || undefined);
   const primaryType = card.types?.[0] ?? "";
   const typeImageUrl = TYPE_ICON_PATHS[primaryType]
     ? withBasePath(TYPE_ICON_PATHS[primaryType])

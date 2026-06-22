@@ -3,6 +3,7 @@ import "./globals.css";
 import { Bowlby_One, Outfit } from "next/font/google";
 
 import { Footer } from "@/components/Footer";
+import { getFeatureFlags } from "@/lib/featureFlags.server";
 import type { Metadata } from "next";
 import { Providers } from "./providers";
 
@@ -59,11 +60,13 @@ export const metadata: Metadata = {
   },
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const featureFlags = await getFeatureFlags();
+
   return (
     <html
       lang="en"
@@ -71,7 +74,7 @@ export default function RootLayout({
     >
       <body className="min-h-full flex flex-col">
         <div className="flex flex-col grow">
-          <Providers>{children}</Providers>
+          <Providers initialFeatureFlags={featureFlags}>{children}</Providers>
         </div>
         <Footer />
       </body>

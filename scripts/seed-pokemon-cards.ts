@@ -10,14 +10,14 @@ type CardSeedInput = {
   id: string;
   setId: string;
   name: string;
-  supertype: string;
+  supertype?: string;
   hp?: string;
-  types: string[];
-  convertedRetreatCost: number;
+  types?: string[];
+  convertedRetreatCost?: number;
   number: string;
-  artist: string;
-  rarity: string;
-  regulationMark: string;
+  artist?: string;
+  rarity?: string;
+  regulationMark?: string;
   images: {
     small: string;
     large: string;
@@ -37,10 +37,7 @@ function toCardSeedInput(
   if (
     typeof item.id !== "string" ||
     typeof item.name !== "string" ||
-    typeof item.supertype !== "string" ||
     typeof item.number !== "string" ||
-    typeof item.rarity !== "string" ||
-    typeof item.regulationMark !== "string" ||
     typeof images?.small !== "string" ||
     typeof images?.large !== "string"
   ) {
@@ -51,7 +48,7 @@ function toCardSeedInput(
     id: item.id,
     setId,
     name: item.name,
-    supertype: item.supertype,
+    supertype: typeof item.supertype === "string" ? item.supertype : undefined,
     hp: typeof item.hp === "string" ? item.hp : undefined,
     types: Array.isArray(types)
       ? types.filter((value): value is string => typeof value === "string")
@@ -65,8 +62,9 @@ function toCardSeedInput(
       typeof item.artist === "string" && item.artist.trim().length > 0
         ? item.artist
         : "Unknown Artist",
-    rarity: item.rarity,
-    regulationMark: item.regulationMark,
+    rarity: typeof item.rarity === "string" ? item.rarity : undefined,
+    regulationMark:
+      typeof item.regulationMark === "string" ? item.regulationMark : undefined,
     images: {
       small: images.small,
       large: images.large,

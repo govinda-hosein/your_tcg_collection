@@ -17,6 +17,7 @@ import { useEffect, useState } from "react";
 import { AppToast } from "@/components/AppToast";
 import type { OwnedCardViewModel } from "@/database/ownedCard.model";
 import { useBasket } from "@/hooks/useBasket";
+import { useFeatureFlags } from "@/hooks/useFeatureFlags";
 import { useToast } from "@/hooks/useToast";
 import { RARITY_COLORS } from "@/lib/constants";
 import { useSession } from "next-auth/react";
@@ -51,6 +52,13 @@ export function BasketPageClient() {
 
   const { data: session } = useSession();
   const isAdmin = !!session;
+  const { isEnabled } = useFeatureFlags();
+  const showPrice = isEnabled("show_price");
+  const showCardCondition = isEnabled("show_card_condition");
+  const totalPrice = items.reduce(
+    (sum, item) => sum + (item.price ?? 1) * item.quantity,
+    0,
+  );
 
   const openImageModal = async (item: BasketItem) => {
     // If we already have the large image, use it
@@ -111,6 +119,8 @@ export function BasketPageClient() {
                 cardImageLarge: owned.card.images?.large ?? "",
                 setName: owned.card.set?.name ?? "",
                 rarity: owned.card.rarity ?? "",
+                price: owned.price ?? 1,
+                cardCondition: owned.cardCondition ?? "Mint",
                 quantity: clampedQty,
                 maxQuantity: owned.quantity,
               },
@@ -268,23 +278,37 @@ export function BasketPageClient() {
           <div className="h-3 bg-linear-to-r from-accent to-primary" />
           <div className="p-5 sm:p-6">
             <div className="mb-4 flex flex-col gap-3">
-              <div className="flex items-center gap-3">
-                <h2
-                  className="text-xl"
-                  style={{ fontFamily: "var(--font-display)" }}
-                >
-                  Cards in Basket
-                </h2>
-                <div className="inline-flex items-center gap-1.5 rounded-full border border-primary/30 bg-primary/10 px-2.5 py-1 text-xs text-primary">
-                  <ShoppingBasket className="h-3.5 w-3.5" />
-                  <span className="uppercase tracking-wide">Qty</span>
-                  <span
-                    className="font-semibold text-foreground"
+              <div className="flex items-center justify-between gap-3 flex-wrap">
+                <div className="flex items-center gap-3">
+                  <h2
+                    className="text-xl"
                     style={{ fontFamily: "var(--font-display)" }}
                   >
-                    {totals.totalQuantity}
-                  </span>
+                    Cards in Basket
+                  </h2>
+                  <div className="inline-flex items-center gap-1.5 rounded-full border border-primary/30 bg-primary/10 px-2.5 py-1 text-xs text-primary">
+                    <ShoppingBasket className="h-3.5 w-3.5" />
+                    <span className="uppercase tracking-wide">Qty</span>
+                    <span
+                      className="font-semibold text-foreground"
+                      style={{ fontFamily: "var(--font-display)" }}
+                    >
+                      {totals.totalQuantity}
+                    </span>
+                  </div>
                 </div>
+
+                {showPrice && items.length > 0 && (
+                  <div className="inline-flex items-center gap-1.5 rounded-full border border-emerald-300 bg-emerald-50 px-2.5 py-1 text-xs text-emerald-900 sm:ml-auto">
+                    <span className="uppercase tracking-wide">Total</span>
+                    <span
+                      className=" text-lg"
+                      style={{ fontFamily: "var(--font-display)" }}
+                    >
+                      ${totalPrice.toFixed(2)}
+                    </span>
+                  </div>
+                )}
               </div>
 
               <div className="flex items-center gap-2">
@@ -350,7 +374,13 @@ export function BasketPageClient() {
                     key={item.cardId}
                     className="rounded-xl border-2 border-border bg-input-background/40 p-4"
                   >
-                    <div className="grid grid-cols-[80px_1fr] gap-3 items-stretch">
+                    <div
+                      className={`grid gap-3 items-stretch ${
+                        showPrice
+                          ? "grid-cols-[80px_1fr_auto]"
+                          : "grid-cols-[80px_1fr]"
+                      }`}
+                    >
                       <div className="relative w-20 min-h-28 self-stretch overflow-hidden rounded-md border border-border bg-card/60">
                         {item.cardImage ? (
                           <button
@@ -381,16 +411,24 @@ export function BasketPageClient() {
                           <p className="text-sm text-muted-foreground truncate">
                             {item.setName || "Unknown Set"}
                           </p>
-                          {item.rarity ? (
-                            <div className="mt-1.5">
-                              <span
-                                className={`inline-flex text-xs px-2 py-0.5 rounded-full bg-linear-to-r ${
-                                  RARITY_COLORS[item.rarity] ||
-                                  "from-gray-300 to-gray-200"
-                                } text-white font-medium`}
-                              >
-                                {item.rarity}
-                              </span>
+                          {item.rarity || showCardCondition ? (
+                            <div className="mt-1.5 flex items-center gap-2">
+                              {item.rarity ? (
+                                <span
+                                  className={`inline-flex text-xs px-2 py-0.5 rounded-full bg-linear-to-r ${
+                                    RARITY_COLORS[item.rarity] ||
+                                    "from-gray-300 to-gray-200"
+                                  } text-white font-medium`}
+                                >
+                                  {item.rarity}
+                                </span>
+                              ) : null}
+
+                              {showCardCondition ? (
+                                <span className="rounded-full border border-slate-300 bg-slate-100 px-2.5 py-0.5 text-xs font-semibold text-slate-900">
+                                  {item.cardCondition || "Mint"}
+                                </span>
+                              ) : null}
                             </div>
                           ) : null}
                         </div>
@@ -429,6 +467,14 @@ export function BasketPageClient() {
                           </button>
                         </div>
                       </div>
+
+                      {showPrice && (
+                        <div className="flex items-start">
+                          <div className="rounded-full border border-emerald-300 bg-emerald-50 px-2.5 py-1 text-md font-semibold text-emerald-900">
+                            ${Number(item.price ?? 1).toFixed(2)}
+                          </div>
+                        </div>
+                      )}
                     </div>
                   </article>
                 ))}

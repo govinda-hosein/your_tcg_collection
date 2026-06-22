@@ -14,10 +14,16 @@ import { Suspense, useEffect, useRef, useState } from "react";
 import { AppToast } from "@/components/AppToast";
 import { CardGrid } from "@/components/CardGrid";
 import { LoadingState } from "@/components/LoadingState";
+import { PokemonTypeSelect } from "@/components/PokemonTypeSelect";
+import {
+  PriceSortSelect,
+  type PriceSortValue,
+} from "@/components/PriceSortSelect";
 import { RaritySelect } from "@/components/RaritySelect";
 import { SearchBar } from "@/components/SearchBar";
 import { SetSelect } from "@/components/SetSelect";
 import type { OwnedCardViewModel } from "@/database/ownedCard.model";
+import { useFeatureFlags } from "@/hooks/useFeatureFlags";
 import { useToast } from "@/hooks/useToast";
 import { withBasePath } from "@/lib/url";
 import Link from "next/link";
@@ -30,6 +36,7 @@ type CollectionStatsResponse = {
     id: string;
     name: string;
   }>;
+  rarities?: string[];
 };
 
 const CARDS_PER_PAGE = 12;
@@ -49,24 +56,37 @@ function HomeContent() {
   const [searchQuery, setSearchQuery] = useState(
     () => searchParams.get("search")?.trim() ?? "",
   );
+  const [selectedPriceSort, setSelectedPriceSort] = useState<PriceSortValue>(
+    () => {
+      const value = searchParams.get("priceSort")?.trim();
+      return value === "price_asc" || value === "price_desc" ? value : "";
+    },
+  );
   const [selectedRarity, setSelectedRarity] = useState("");
   const [selectedSetId, setSelectedSetId] = useState("");
   const [selectedArtist, setSelectedArtist] = useState("");
+  const [selectedType, setSelectedType] = useState("");
   const [stats, setStats] = useState<CollectionStatsResponse>({
     totalQuantity: 0,
     artists: [],
     sets: [],
+    rarities: [],
   });
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const { isEnabled } = useFeatureFlags();
+  const showPrice = isEnabled("show_price");
+  const showPokemonTypeFilter = isEnabled("show_pokemon_type_filter");
   const { toastMessage, showToast } = useToast(1700);
   const listTopRef = useRef<HTMLDivElement | null>(null);
   const shouldScrollToListRef = useRef(false);
   const previousSearchQueryRef = useRef(searchQuery);
 
+  const priceSortFromUrl = searchParams.get("priceSort")?.trim() ?? "";
   const rarityFromUrl = searchParams.get("rarity")?.trim() ?? "";
   const setFromUrl = searchParams.get("set")?.trim() ?? "";
   const artistFromUrl = searchParams.get("artist")?.trim() ?? "";
+  const typeFromUrl = searchParams.get("type")?.trim() ?? "";
   const rawPageFromUrl = Number(searchParams.get("page") ?? "1");
 
   const fetchCards = async () => {
@@ -115,6 +135,19 @@ function HomeContent() {
   }, []);
 
   useEffect(() => {
+    if (!showPrice) {
+      setSelectedPriceSort("");
+      return;
+    }
+
+    setSelectedPriceSort(
+      priceSortFromUrl === "price_asc" || priceSortFromUrl === "price_desc"
+        ? priceSortFromUrl
+        : "",
+    );
+  }, [priceSortFromUrl, showPrice]);
+
+  useEffect(() => {
     setSelectedRarity(rarityFromUrl);
   }, [rarityFromUrl]);
 
@@ -125,6 +158,10 @@ function HomeContent() {
   useEffect(() => {
     setSelectedArtist(artistFromUrl);
   }, [artistFromUrl]);
+
+  useEffect(() => {
+    setSelectedType(typeFromUrl);
+  }, [typeFromUrl]);
 
   const handleSearchChange = (query: string) => {
     setSearchQuery(query);
@@ -221,6 +258,42 @@ function HomeContent() {
     });
   };
 
+  const handleTypeChange = async (type: string) => {
+    setSelectedType(type);
+    setSearchQuery("");
+
+    const nextParams = new URLSearchParams(searchParams.toString());
+    if (type) {
+      nextParams.set("type", type);
+    } else {
+      nextParams.delete("type");
+    }
+    nextParams.delete("search");
+    nextParams.delete("page");
+
+    const query = nextParams.toString();
+    router.replace(query ? `${pathname}?${query}` : pathname, {
+      scroll: false,
+    });
+  };
+
+  const handlePriceSortChange = async (priceSort: PriceSortValue) => {
+    setSelectedPriceSort(priceSort);
+
+    const nextParams = new URLSearchParams(searchParams.toString());
+    if (priceSort) {
+      nextParams.set("priceSort", priceSort);
+    } else {
+      nextParams.delete("priceSort");
+    }
+    nextParams.delete("page");
+
+    const query = nextParams.toString();
+    router.replace(query ? `${pathname}?${query}` : pathname, {
+      scroll: false,
+    });
+  };
+
   const artistOptions = stats.artists.map((artist) => ({
     id: artist,
     name: artist,
@@ -252,15 +325,36 @@ function HomeContent() {
       }
     }
 
+    if (selectedType) {
+      const cardTypes = card.card.types ?? [];
+      if (
+        !cardTypes.some((t) => t.toLowerCase() === selectedType.toLowerCase())
+      ) {
+        return false;
+      }
+    }
+
     if (!searchQuery) return true;
     const cardName = card.card?.name?.toLowerCase() ?? "";
     const query = searchQuery.toLowerCase();
     return cardName.includes(query);
   });
 
+  const sortedCards =
+    showPrice && selectedPriceSort
+      ? [...filteredCards].sort((leftCard, rightCard) => {
+          const leftPrice = leftCard.price ?? 1;
+          const rightPrice = rightCard.price ?? 1;
+
+          return selectedPriceSort === "price_asc"
+            ? leftPrice - rightPrice
+            : rightPrice - leftPrice;
+        })
+      : filteredCards;
+
   const totalPages = Math.max(
     1,
-    Math.ceil(filteredCards.length / CARDS_PER_PAGE),
+    Math.ceil(sortedCards.length / CARDS_PER_PAGE),
   );
   const pageFromUrl =
     Number.isFinite(rawPageFromUrl) && rawPageFromUrl > 0
@@ -268,7 +362,7 @@ function HomeContent() {
       : 1;
   const currentPage = Math.min(pageFromUrl, totalPages);
   const pageStart = (currentPage - 1) * CARDS_PER_PAGE;
-  const paginatedCards = filteredCards.slice(
+  const paginatedCards = sortedCards.slice(
     pageStart,
     pageStart + CARDS_PER_PAGE,
   );
@@ -342,9 +436,30 @@ function HomeContent() {
   ) => {
     const currentCard = cards.find((card) => card.cardId === id);
     const nextQuantity = updates.quantity ?? currentCard?.quantity;
+    const nextPrice = updates.price ?? currentCard?.price;
+    const nextCardCondition =
+      updates.cardCondition ?? currentCard?.cardCondition;
 
     if (!Number.isInteger(nextQuantity) || (nextQuantity ?? 0) < 1) {
       console.error("Quantity must be an integer greater than 0");
+      return;
+    }
+
+    if (
+      nextPrice !== undefined &&
+      (typeof nextPrice !== "number" ||
+        Number.isNaN(nextPrice) ||
+        nextPrice < 0)
+    ) {
+      console.error("Price must be a number greater than or equal to 0");
+      return;
+    }
+
+    if (
+      nextCardCondition !== undefined &&
+      (!nextCardCondition || !nextCardCondition.trim())
+    ) {
+      console.error("Card condition must be a non-empty string");
       return;
     }
 
@@ -357,11 +472,15 @@ function HomeContent() {
         body: JSON.stringify({
           cardId: id,
           quantity: nextQuantity,
+          ...(nextPrice !== undefined ? { price: nextPrice } : {}),
+          ...(nextCardCondition !== undefined
+            ? { cardCondition: nextCardCondition }
+            : {}),
         }),
       });
 
       if (!response.ok) {
-        throw new Error("Failed to update card quantity");
+        throw new Error("Failed to update card");
       }
 
       const updatedCard = (await response.json()) as OwnedCardViewModel;
@@ -369,7 +488,7 @@ function HomeContent() {
         prevCards.map((card) => (card.cardId === id ? updatedCard : card)),
       );
     } catch (error) {
-      console.error("Error updating card quantity:", error);
+      console.error("Error updating card:", error);
     }
   };
 
@@ -420,11 +539,21 @@ function HomeContent() {
 
         {/* Controls */}
         <div className="mt-2 flex w-full flex-col gap-4">
-          <div className="flex-1 flex flex-col sm:flex-row gap-3 items-start sm:items-center w-full">
+          <div className="flex w-full flex-col gap-3 sm:flex-row sm:items-center">
             <SearchBar value={searchQuery} onChange={handleSearchChange} />
+            {showPrice ? (
+              <PriceSortSelect
+                value={selectedPriceSort}
+                onChange={handlePriceSortChange}
+              />
+            ) : null}
+          </div>
+
+          <div className="flex w-full flex-col gap-3 sm:flex-row sm:items-center">
             <RaritySelect
               value={selectedRarity}
               onChange={handleRarityChange}
+              rarities={stats.rarities}
             />
             <SetSelect
               value={selectedSetId}
@@ -436,6 +565,12 @@ function HomeContent() {
               artists={artistOptions}
               onChange={handleArtistChange}
             />
+            {showPokemonTypeFilter ? (
+              <PokemonTypeSelect
+                value={selectedType}
+                onChange={handleTypeChange}
+              />
+            ) : null}
           </div>
 
           <div className="flex w-full items-center justify-center gap-3">
@@ -488,12 +623,12 @@ function HomeContent() {
           }}
         />
 
-        {filteredCards.length > 0 && totalPages > 1 ? (
+        {sortedCards.length > 0 && totalPages > 1 ? (
           <div className="mt-6 flex flex-col items-center gap-3 text-center">
             <p className="text-sm text-muted-foreground">
               Showing {pageStart + 1}-
-              {Math.min(pageStart + CARDS_PER_PAGE, filteredCards.length)} of{" "}
-              {filteredCards.length} cards
+              {Math.min(pageStart + CARDS_PER_PAGE, sortedCards.length)} of{" "}
+              {sortedCards.length} cards
             </p>
 
             <div className="flex items-center justify-center gap-2">

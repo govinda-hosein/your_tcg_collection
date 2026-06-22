@@ -4,18 +4,18 @@ const setSchema = new Schema(
   {
     id: { type: String, required: true, unique: true, index: true, trim: true },
     name: { type: String, required: true, trim: true },
-    series: { type: String, required: true, trim: true },
-    printedTotal: { type: Number, required: true, min: 0 },
-    total: { type: Number, required: true, min: 0 },
+    series: { type: String, required: false, trim: true },
+    printedTotal: { type: Number, required: false, min: 0 },
+    total: { type: Number, required: false, min: 0 },
     ptcgoCode: { type: String, required: true, trim: true },
     releaseDate: {
       type: String,
-      required: true,
+      required: false,
       match: /^\d{4}\/\d{2}\/\d{2}$/,
     },
     updatedAt: {
       type: String,
-      required: true,
+      required: false,
       match: /^\d{4}\/\d{2}\/\d{2}\s\d{2}:\d{2}:\d{2}$/,
     },
   },

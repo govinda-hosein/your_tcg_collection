@@ -2,4 +2,4 @@
 SECRETS_SCAN_OMIT_KEYS = "NEXT_PUBLIC_SITE_TITLE,NEXT_PUBLIC_SITE_DESCRIPTION,NEXT_PUBLIC_BASE_URL,NEXT_PUBLIC_BASE_PATH"
 
 [build]
-command = "npm run seed:sets && npm run seed:pokemon-cards && npm run update:missing-artists && npm run build"
+command = "npm run seed:config && npm run seed:sets && npm run seed:pokemon-cards && npm run update:missing-artists && npm run build"
