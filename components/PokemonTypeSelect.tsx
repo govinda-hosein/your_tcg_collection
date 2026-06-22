@@ -1,8 +1,9 @@
 "use client";
 
+import { Check, ChevronDown } from "lucide-react";
+import { useEffect, useMemo, useRef, useState } from "react";
+
 import { TYPE_COLORS } from "@/lib/constants";
-import { ChevronDown } from "lucide-react";
-import { useMemo } from "react";
 
 interface PokemonTypeSelectProps {
   value: string;
@@ -12,43 +13,114 @@ interface PokemonTypeSelectProps {
 const POKEMON_TYPES = Object.keys(TYPE_COLORS);
 
 export function PokemonTypeSelect({ value, onChange }: PokemonTypeSelectProps) {
-  const options = useMemo(() => {
+  const [isOpen, setIsOpen] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  const computedOptions = useMemo(() => {
     return POKEMON_TYPES.map((type) => ({
-      value: type,
       label: type,
-      color: TYPE_COLORS[type] || "#666",
-    }));
+      color: TYPE_COLORS[type],
+    })).sort((a, b) => a.label.localeCompare(b.label));
+  }, []);
+
+  const selectedOption = useMemo(
+    () => computedOptions.find((option) => option.label === value),
+    [value, computedOptions],
+  );
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (!containerRef.current?.contains(event.target as Node)) {
+        setIsOpen(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
   }, []);
 
   return (
-    <div className="relative w-full sm:w-65">
-      <select
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        className="appearance-none w-full px-3 py-2 bg-input-background border border-border rounded-lg
-                   text-foreground text-sm placeholder-muted-foreground
-                   focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary
-                   hover:bg-input-background/80 transition-colors cursor-pointer
-                   pr-8"
+    <div ref={containerRef} className="relative w-full sm:w-65">
+      <button
+        type="button"
+        onClick={() => setIsOpen((prev) => !prev)}
+        className="w-full px-4 py-3 bg-input-background border-2 border-border rounded-lg
+                   text-sm focus:outline-none focus:border-primary transition-colors duration-200
+                   cursor-pointer flex items-center justify-between gap-3"
       >
-        <option value="">All Types</option>
-        {options.map((option) => (
-          <option key={option.value} value={option.value}>
-            {option.label}
-          </option>
-        ))}
-      </select>
-
-      <div className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2">
-        <ChevronDown className="h-4 w-4 text-muted-foreground" />
-      </div>
-
-      {value && (
-        <div
-          className="absolute left-3 top-1/2 -translate-y-1/2 h-2 w-2 rounded-full pointer-events-none"
-          style={{ backgroundColor: TYPE_COLORS[value] || "#666" }}
+        <span className="flex items-center gap-2 min-w-0">
+          {selectedOption ? (
+            <div
+              className="h-3.5 w-3.5 rounded-full shrink-0"
+              style={{ backgroundColor: selectedOption.color }}
+              aria-hidden="true"
+            />
+          ) : null}
+          <span className="truncate">
+            {selectedOption?.label ?? "All Types"}
+          </span>
+        </span>
+        <ChevronDown
+          className={`h-4 w-4 text-muted-foreground transition-transform duration-200 ${
+            isOpen ? "rotate-180" : ""
+          }`}
         />
-      )}
+      </button>
+
+      {isOpen ? (
+        <div
+          className="absolute z-30 mt-2 w-full bg-input-background border-2 border-border
+                     rounded-lg shadow-lg p-1"
+        >
+          <button
+            type="button"
+            onClick={() => {
+              onChange("");
+              setIsOpen(false);
+            }}
+            className={`w-full px-3 py-2 rounded-md text-left text-sm flex items-center justify-between
+                       hover:bg-muted/50 transition-colors duration-150 ${
+                         value === "" ? "bg-muted/40" : ""
+                       }`}
+          >
+            <span>All Types</span>
+            {value === "" ? <Check className="h-4 w-4 text-primary" /> : null}
+          </button>
+
+          <div className="my-1 h-px bg-border" />
+
+          <div className="max-h-64 overflow-y-auto">
+            {computedOptions.map((option) => (
+              <button
+                key={option.label}
+                type="button"
+                onClick={() => {
+                  onChange(option.label);
+                  setIsOpen(false);
+                }}
+                className={`w-full px-3 py-2 rounded-md text-left text-sm flex items-center justify-between
+                           hover:bg-muted/50 transition-colors duration-150 ${
+                             value === option.label ? "bg-muted/40" : ""
+                           }`}
+              >
+                <span className="flex items-center gap-2 min-w-0">
+                  <div
+                    className="h-3.5 w-3.5 shrink-0 rounded-full"
+                    style={{ backgroundColor: option.color }}
+                    aria-hidden="true"
+                  />
+                  <span className="truncate">{option.label}</span>
+                </span>
+                {value === option.label ? (
+                  <Check className="h-4 w-4 text-primary" />
+                ) : null}
+              </button>
+            ))}
+          </div>
+        </div>
+      ) : null}
     </div>
   );
 }
