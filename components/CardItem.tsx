@@ -3,11 +3,11 @@ import {
   readBasketFromStorage,
   writeBasketToStorage,
 } from "@/lib/basket";
+import { RARITY_COLORS, TYPE_COLORS } from "@/lib/constants";
 import { useMemo, useState } from "react";
 
 import type { OwnedCardViewModel } from "@/database/ownedCard.model";
 import { useFeatureFlags } from "@/hooks/useFeatureFlags";
-import { RARITY_COLORS } from "@/lib/constants";
 import { isHoloRarity } from "@/lib/functions";
 import Image from "next/image";
 
@@ -25,19 +25,6 @@ interface CardItemProps {
   isLoggedIn: boolean;
   onBasketAdd?: (event: BasketAddEvent) => void;
 }
-
-const typeColors: Record<string, string> = {
-  Fire: "#ef233c",
-  Water: "#3d5a80",
-  Electric: "#ffd60a",
-  Grass: "#06ffa5",
-  Psychic: "#8338ec",
-  Fighting: "#d62828",
-  Dark: "#2b2d42",
-  Steel: "#a0a0a0",
-  Dragon: "#ff006e",
-  Fairy: "#ffc6ff",
-};
 
 export function CardItem({ card, onClick, index, onBasketAdd }: CardItemProps) {
   const { isEnabled } = useFeatureFlags();
@@ -176,7 +163,7 @@ export function CardItem({ card, onClick, index, onBasketAdd }: CardItemProps) {
               <div
                 className="px-2 py-1 rounded-md text-xs font-bold text-white shadow-lg"
                 style={{
-                  backgroundColor: typeColors[pokemonCard.types[0]] || "#666",
+                  backgroundColor: TYPE_COLORS[pokemonCard.types[0]] || "#666",
                 }}
               >
                 {pokemonCard.types[0]}

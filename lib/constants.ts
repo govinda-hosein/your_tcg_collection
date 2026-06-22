@@ -40,3 +40,16 @@ export const CARD_CONDITIONS = [
   "Dent",
   "Print Line",
 ] as const;
+
+export const TYPE_COLORS: Record<string, string> = {
+  Fire: "#ef233c",
+  Water: "#3d5a80",
+  Electric: "#ffd60a",
+  Grass: "#06ffa5",
+  Psychic: "#8338ec",
+  Fighting: "#d62828",
+  Dark: "#2b2d42",
+  Steel: "#a0a0a0",
+  Dragon: "#ff006e",
+  Fairy: "#ffc6ff",
+};
