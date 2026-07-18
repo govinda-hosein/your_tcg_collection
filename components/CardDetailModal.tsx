@@ -6,6 +6,7 @@ import type { OwnedCardViewModel } from "@/database/ownedCard.model";
 import { useFeatureFlags } from "@/hooks/useFeatureFlags";
 import { useSession } from "next-auth/react";
 import Image from "next/image";
+import { createPortal } from "react-dom";
 
 interface CardDetailModalProps {
   card: OwnedCardViewModel;
@@ -95,7 +96,7 @@ export function CardDetailModal({
   const { data: session } = useSession();
   const isAdmin = !!session;
 
-  return (
+  const modalContent = (
     <div
       className="fixed inset-0 z-100 flex items-center justify-center p-3 md:p-6"
       onClick={onClose}
@@ -416,4 +417,6 @@ export function CardDetailModal({
       `}</style>
     </div>
   );
+
+  return createPortal(modalContent, document.body);
 }
