@@ -7,6 +7,13 @@ function escapeRegex(value: string): string {
   return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
 
+function buildApostropheInsensitivePattern(value: string): string {
+  return escapeRegex(value).replace(
+    /['\u2018\u2019\u02BC]/g,
+    "['\\u2018\\u2019\\u02BC]",
+  );
+}
+
 export async function GET(request: NextRequest) {
   try {
     await connectDB();
@@ -75,7 +82,7 @@ export async function GET(request: NextRequest) {
       name.length > 0
         ? {
             name: {
-              $regex: escapeRegex(name),
+              $regex: buildApostropheInsensitivePattern(name),
               $options: "i",
             },
           }

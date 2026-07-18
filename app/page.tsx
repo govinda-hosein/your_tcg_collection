@@ -1,6 +1,7 @@
 import HomePageClient from "@/components/HomePageClient";
 import { OwnedCard } from "@/database";
 import type { OwnedCardViewModel } from "@/database/ownedCard.model";
+import { normalizeSearchText } from "@/lib/functions";
 import connectDB from "@/lib/mongodb";
 import type { Metadata } from "next";
 
@@ -20,10 +21,10 @@ function firstValue(value?: string | string[]): string {
 
 function matchesSearch(card: OwnedCardViewModel, query: string) {
   if (!query) return true;
-  const q = query.toLowerCase();
-  const cardName = card.card?.name?.toLowerCase() ?? "";
-  const setName = card.card?.set?.name?.toLowerCase() ?? "";
-  const artist = card.card?.artist?.toLowerCase() ?? "";
+  const q = normalizeSearchText(query);
+  const cardName = normalizeSearchText(card.card?.name ?? "");
+  const setName = normalizeSearchText(card.card?.set?.name ?? "");
+  const artist = normalizeSearchText(card.card?.artist ?? "");
   return cardName.includes(q) || setName.includes(q) || artist.includes(q);
 }
 

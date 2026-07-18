@@ -25,6 +25,7 @@ import { SetSelect } from "@/components/SetSelect";
 import type { OwnedCardViewModel } from "@/database/ownedCard.model";
 import { useFeatureFlags } from "@/hooks/useFeatureFlags";
 import { useToast } from "@/hooks/useToast";
+import { normalizeSearchText } from "@/lib/functions";
 import { withBasePath } from "@/lib/url";
 import Link from "next/link";
 import { ArtistSelect } from "./ArtistSelect";
@@ -335,8 +336,8 @@ function HomeContent() {
     }
 
     if (!searchQuery) return true;
-    const cardName = card.card?.name?.toLowerCase() ?? "";
-    const query = searchQuery.toLowerCase();
+    const cardName = normalizeSearchText(card.card?.name ?? "");
+    const query = normalizeSearchText(searchQuery);
     return cardName.includes(query);
   });
 
