@@ -13,6 +13,13 @@ type CardPricing = {
   };
 };
 
+// Prices above 2 and below 5 become 5; prices of 5 or more round to the nearest 5.
+function roundTtdPrice(price: number): number {
+  if (price > 2 && price < 5) return 5;
+  if (price >= 5) return Math.round(price / 5) * 5;
+  return price;
+}
+
 export async function GET(
   _request: NextRequest,
   { params }: { params: Promise<{ id: string }> },
@@ -58,7 +65,7 @@ export async function GET(
     );
   }
 
-  const marketPriceTTD = Math.ceil(marketPrice * USD_TO_TTD);
+  const marketPriceTTD = roundTtdPrice(Math.ceil(marketPrice * USD_TO_TTD));
 
   return NextResponse.json({
     marketPriceTTD,
