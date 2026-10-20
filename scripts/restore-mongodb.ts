@@ -73,15 +73,15 @@ async function runRestore() {
   const collections = [
     {
       fileName: "owned-cards.json",
-      model: OwnedCard as mongoose.Model<never>,
+      model: OwnedCard as unknown as mongoose.Model<never>,
     },
     {
       fileName: "pokemon-cards.json",
-      model: PokemonCard as mongoose.Model<never>,
+      model: PokemonCard as unknown as mongoose.Model<never>,
     },
     {
       fileName: "sets.json",
-      model: Set as mongoose.Model<never>,
+      model: Set as unknown as mongoose.Model<never>,
     },
   ];
 
