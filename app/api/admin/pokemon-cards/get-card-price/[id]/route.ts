@@ -50,7 +50,13 @@ export async function GET(
   const tcgDexCardId = tcgDexSetId + "-" + number;
 
   // Fetch card from TCGdex.
-  const card = await tcgdex.card.get(tcgDexCardId);
+  let card;
+  try {
+    card = await tcgdex.card.get(tcgDexCardId);
+  } catch (error) {
+    console.error("Failed to fetch card from TCGdex:", error);
+  }
+
   if (!card) {
     return NextResponse.json(
       { error: `Card not found in TCGdex: ${tcgDexCardId}` },
