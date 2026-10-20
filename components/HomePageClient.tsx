@@ -658,17 +658,6 @@ function HomeContent() {
                 Prev
               </button>
 
-              <div className="rounded-lg border border-border bg-card px-3 py-2 text-sm text-muted-foreground">
-                Page{" "}
-                <span className="font-semibold text-foreground">
-                  {currentPage}
-                </span>{" "}
-                of{" "}
-                <span className="font-semibold text-foreground">
-                  {totalPages}
-                </span>
-              </div>
-
               <div className="flex items-center gap-2 rounded-lg border border-border bg-card px-2 py-1.5 text-sm text-muted-foreground">
                 <label htmlFor="page-number" className="pl-1">
                   Go to
