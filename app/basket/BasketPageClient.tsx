@@ -12,7 +12,7 @@ import {
   X,
 } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import { AppToast } from "@/components/AppToast";
 import type { OwnedCardViewModel } from "@/database/ownedCard.model";
@@ -25,6 +25,10 @@ import Image from "next/image";
 import Link from "next/link";
 
 const BASE_PATH = process.env.NEXT_PUBLIC_BASE_PATH ?? "";
+
+// A card with no entry yet is still loading.
+type MarketPriceState =
+  { status: "error" } | { status: "loaded"; priceTTD: number };
 
 export function BasketPageClient() {
   const {
@@ -53,12 +57,62 @@ export function BasketPageClient() {
   const { data: session } = useSession();
   const isAdmin = !!session;
   const { isEnabled } = useFeatureFlags();
+  const showMarketPricesInBasket =
+    isAdmin && isEnabled("show_market_prices_in_basket");
   const showPrice = isEnabled("show_price");
   const showCardCondition = isEnabled("show_card_condition");
+  const showPriceColumn = showPrice || showMarketPricesInBasket;
   const totalPrice = items.reduce(
     (sum, item) => sum + (item.price ?? 1) * item.quantity,
     0,
   );
+
+  const [marketPrices, setMarketPrices] = useState<
+    Record<string, MarketPriceState>
+  >({});
+  const requestedMarketPriceIds = useRef(new Set<string>());
+
+  useEffect(() => {
+    if (!showMarketPricesInBasket || !isHydrated) return;
+
+    const idsToFetch = items
+      .map((item) => item.cardId)
+      .filter((cardId) => !requestedMarketPriceIds.current.has(cardId));
+    if (idsToFetch.length === 0) return;
+
+    idsToFetch.forEach((cardId) => requestedMarketPriceIds.current.add(cardId));
+
+    idsToFetch.forEach(async (cardId) => {
+      let next: MarketPriceState;
+      try {
+        const response = await fetch(
+          `${BASE_PATH}/api/admin/pokemon-cards/get-card-price/${encodeURIComponent(cardId)}`,
+        );
+        if (!response.ok) throw new Error(`API error ${response.status}`);
+        const data = (await response.json()) as { marketPriceTTD?: number };
+        if (typeof data.marketPriceTTD !== "number") {
+          throw new Error("Missing market price");
+        }
+        next = { status: "loaded", priceTTD: data.marketPriceTTD };
+      } catch {
+        next = { status: "error" };
+      }
+      setMarketPrices((prev) => ({ ...prev, [cardId]: next }));
+    });
+  }, [items, isHydrated, showMarketPricesInBasket]);
+
+  const isLoadingMarketPrices = items.some(
+    (item) => !marketPrices[item.cardId],
+  );
+  const hasMarketPriceErrors = items.some(
+    (item) => marketPrices[item.cardId]?.status === "error",
+  );
+  const marketTotalTTD = items.reduce((sum, item) => {
+    const state = marketPrices[item.cardId];
+    return state?.status === "loaded"
+      ? sum + state.priceTTD * item.quantity
+      : sum;
+  }, 0);
 
   const openImageModal = async (item: BasketItem) => {
     // If we already have the large image, use it
@@ -298,6 +352,32 @@ export function BasketPageClient() {
                   </div>
                 </div>
 
+                {showMarketPricesInBasket && items.length > 0 && (
+                  <div
+                    className="inline-flex items-center gap-1.5 rounded-full border border-sky-300 bg-sky-50 px-2.5 py-1 text-xs text-sky-900 sm:ml-auto"
+                    title={
+                      hasMarketPriceErrors && !isLoadingMarketPrices
+                        ? "Some market prices are unavailable and not included"
+                        : undefined
+                    }
+                  >
+                    <span className="uppercase tracking-wide">
+                      Market Total
+                    </span>
+                    {isLoadingMarketPrices ? (
+                      <span className="h-6 w-16 animate-pulse rounded-md bg-sky-200" />
+                    ) : (
+                      <span
+                        className=" text-lg"
+                        style={{ fontFamily: "var(--font-display)" }}
+                      >
+                        TT${marketTotalTTD.toLocaleString()}
+                        {hasMarketPriceErrors ? "*" : ""}
+                      </span>
+                    )}
+                  </div>
+                )}
+
                 {showPrice && items.length > 0 && (
                   <div className="inline-flex items-center gap-1.5 rounded-full border border-emerald-300 bg-emerald-50 px-2.5 py-1 text-xs text-emerald-900 sm:ml-auto">
                     <span className="uppercase tracking-wide">Total</span>
@@ -376,7 +456,7 @@ export function BasketPageClient() {
                   >
                     <div
                       className={`grid gap-3 items-stretch ${
-                        showPrice
+                        showPriceColumn
                           ? "grid-cols-[80px_1fr_auto]"
                           : "grid-cols-[80px_1fr]"
                       }`}
@@ -468,11 +548,38 @@ export function BasketPageClient() {
                         </div>
                       </div>
 
-                      {showPrice && (
-                        <div className="flex items-start">
-                          <div className="rounded-full border border-emerald-300 bg-emerald-50 px-2.5 py-1 text-md font-semibold text-emerald-900">
-                            ${Number(item.price ?? 1).toFixed(2)}
-                          </div>
+                      {showPriceColumn && (
+                        <div className="flex flex-col items-end gap-2">
+                          {showPrice && (
+                            <div className="rounded-full border border-emerald-300 bg-emerald-50 px-2.5 py-1 text-md font-semibold text-emerald-900">
+                              ${Number(item.price ?? 1).toFixed(2)}
+                            </div>
+                          )}
+
+                          {showMarketPricesInBasket &&
+                            (() => {
+                              const state = marketPrices[item.cardId];
+                              if (!state) {
+                                return (
+                                  <div
+                                    className="h-8 w-20 animate-pulse rounded-full bg-sky-200"
+                                    aria-label="Loading market price"
+                                  />
+                                );
+                              }
+                              if (state.status === "error") {
+                                return (
+                                  <div className="rounded-full border border-border bg-muted/40 px-2.5 py-1 text-sm text-muted-foreground">
+                                    N/A
+                                  </div>
+                                );
+                              }
+                              return (
+                                <div className="rounded-full border border-sky-300 bg-sky-50 px-2.5 py-1 text-md font-semibold text-sky-900">
+                                  TT${state.priceTTD.toLocaleString()}
+                                </div>
+                              );
+                            })()}
                         </div>
                       )}
                     </div>
