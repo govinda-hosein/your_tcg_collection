@@ -6,7 +6,7 @@ export const FEATURE_FLAG_NAMES = [
   "show_create_card",
   "show_delete_pokemon_card",
   "show_pokemon_type_filter",
-  "show_card_prices_in_basket",
+  "show_market_prices_in_basket",
 ] as const;
 
 export type FeatureFlagName = (typeof FEATURE_FLAG_NAMES)[number];
@@ -21,7 +21,7 @@ export const DEFAULT_FEATURE_FLAGS: FeatureFlags = {
   show_create_card: false,
   show_delete_pokemon_card: false,
   show_pokemon_type_filter: false,
-  show_card_prices_in_basket: false,
+  show_market_prices_in_basket: false,
 };
 
 export function parseFeatureFlagValue(value: string | undefined): boolean {

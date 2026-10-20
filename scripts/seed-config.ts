@@ -38,7 +38,7 @@ const seedConfig: ConfigSeedInput[] = [
     value: "false",
   },
   {
-    name: "show_card_prices_in_basket",
+    name: "show_market_prices_in_basket",
     value: "false",
   },
 ];

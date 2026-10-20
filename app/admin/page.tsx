@@ -737,7 +737,7 @@ function AdminLoginContentInner() {
                   <div className="flex items-center justify-between gap-3">
                     <div>
                       <p className="text-sm font-medium">
-                        Show Card Prices in Basket
+                        Show Market Prices In Basket
                       </p>
                     </div>
 
@@ -745,7 +745,7 @@ function AdminLoginContentInner() {
                       type="button"
                       onClick={handleToggleShowCardPricesInBasket}
                       disabled={isSavingSetting}
-                      aria-label="Toggle Show Card Prices in Basket setting"
+                      aria-label="Toggle Show Market Prices In Basket setting"
                       aria-pressed={!!showCardPricesInBasket}
                       className={`relative inline-flex h-7 w-12 items-center rounded-full border transition-colors disabled:opacity-60 disabled:cursor-not-allowed ${
                         showCardPricesInBasket
