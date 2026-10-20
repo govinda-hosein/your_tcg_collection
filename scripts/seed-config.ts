@@ -37,6 +37,10 @@ const seedConfig: ConfigSeedInput[] = [
     name: "show_pokemon_type_filter",
     value: "false",
   },
+  {
+    name: "show_card_prices_in_basket",
+    value: "false",
+  },
 ];
 
 async function runSeed() {

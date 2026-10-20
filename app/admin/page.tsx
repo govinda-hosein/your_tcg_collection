@@ -28,6 +28,7 @@ const SHOW_CARD_CONDITION_CONFIG_NAME = FEATURE_FLAG_NAMES[3];
 const SHOW_CREATE_CARD_CONFIG_NAME = FEATURE_FLAG_NAMES[4];
 const SHOW_DELETE_POKEMON_CARD_CONFIG_NAME = FEATURE_FLAG_NAMES[5];
 const SHOW_POKEMON_TYPE_FILTER_CONFIG_NAME = FEATURE_FLAG_NAMES[6];
+const SHOW_CARD_PRICES_IN_BASKET_CONFIG_NAME = FEATURE_FLAG_NAMES[7];
 
 function AdminLoginContentInner() {
   const { data: session } = useSession();
@@ -50,6 +51,9 @@ function AdminLoginContentInner() {
   const [showPokemonTypeFilter, setShowPokemonTypeFilter] = useState<
     boolean | null
   >(null);
+  const [showCardPricesInBasket, setShowCardPricesInBasket] = useState<
+    boolean | null
+  >(null);
   const [showDeleteAllConfirm, setShowDeleteAllConfirm] = useState(false);
   const [isDeletingAll, setIsDeletingAll] = useState(false);
   const [isSavingSetting, setIsSavingSetting] = useState(false);
@@ -64,6 +68,7 @@ function AdminLoginContentInner() {
     setShowCreateCard(flags[SHOW_CREATE_CARD_CONFIG_NAME]);
     setShowDeletePokemonCard(flags[SHOW_DELETE_POKEMON_CARD_CONFIG_NAME]);
     setShowPokemonTypeFilter(flags[SHOW_POKEMON_TYPE_FILTER_CONFIG_NAME]);
+    setShowCardPricesInBasket(flags[SHOW_CARD_PRICES_IN_BASKET_CONFIG_NAME]);
   };
 
   useEffect(() => {
@@ -75,6 +80,7 @@ function AdminLoginContentInner() {
       setShowCreateCard(null);
       setShowDeletePokemonCard(null);
       setShowPokemonTypeFilter(null);
+      setShowCardPricesInBasket(null);
       setSettingsError(null);
       return;
     }
@@ -338,6 +344,39 @@ function AdminLoginContentInner() {
       setShowPokemonTypeFilter(!!data.enabled);
     } catch {
       setShowPokemonTypeFilter(!nextEnabled);
+      setSettingsError("Could not save setting. Please try again.");
+    } finally {
+      setIsSavingSetting(false);
+    }
+  };
+
+  const handleToggleShowCardPricesInBasket = async () => {
+    if (showCardPricesInBasket === null || isSavingSetting) return;
+
+    setSettingsError(null);
+    setIsSavingSetting(true);
+
+    const nextEnabled = !showCardPricesInBasket;
+    setShowCardPricesInBasket(nextEnabled);
+
+    try {
+      const response = await fetch(withBasePath("/api/admin/config"), {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: SHOW_CARD_PRICES_IN_BASKET_CONFIG_NAME,
+          enabled: nextEnabled,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to save settings");
+      }
+
+      const data = (await response.json()) as { enabled?: boolean };
+      setShowCardPricesInBasket(!!data.enabled);
+    } catch {
+      setShowCardPricesInBasket(!nextEnabled);
       setSettingsError("Could not save setting. Please try again.");
     } finally {
       setIsSavingSetting(false);
@@ -680,6 +719,43 @@ function AdminLoginContentInner() {
                       <span
                         className={`inline-block h-5 w-5 transform rounded-full bg-white shadow transition-transform ${
                           showPokemonTypeFilter
+                            ? "translate-x-6"
+                            : "translate-x-1"
+                        }`}
+                      />
+                    </button>
+                  </div>
+
+                  {settingsError ? (
+                    <div className="mt-2 rounded-md border border-destructive/30 bg-destructive/10 px-2 py-1.5 text-xs text-destructive">
+                      {settingsError}
+                    </div>
+                  ) : null}
+                </div>
+
+                <div className="rounded-lg border border-border bg-input-background/50 p-3">
+                  <div className="flex items-center justify-between gap-3">
+                    <div>
+                      <p className="text-sm font-medium">
+                        Show Card Prices in Basket
+                      </p>
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={handleToggleShowCardPricesInBasket}
+                      disabled={isSavingSetting}
+                      aria-label="Toggle Show Card Prices in Basket setting"
+                      aria-pressed={!!showCardPricesInBasket}
+                      className={`relative inline-flex h-7 w-12 items-center rounded-full border transition-colors disabled:opacity-60 disabled:cursor-not-allowed ${
+                        showCardPricesInBasket
+                          ? "bg-primary border-primary/80"
+                          : "bg-muted border-border"
+                      }`}
+                    >
+                      <span
+                        className={`inline-block h-5 w-5 transform rounded-full bg-white shadow transition-transform ${
+                          showCardPricesInBasket
                             ? "translate-x-6"
                             : "translate-x-1"
                         }`}
