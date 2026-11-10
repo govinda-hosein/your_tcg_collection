@@ -233,4 +233,6 @@ export const TCG_DATA_TO_TCG_DEX_SET_MAP: Record<string, string> = {
   zsv10pt5: "sv10.5b",
 };
 
+export const TCG_DEX_EXCLUDE_NUM_PADDING = ["swsh4.5"];
+
 export const USD_TO_TTD = 7;

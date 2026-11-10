@@ -1,4 +1,8 @@
-import { TCG_DATA_TO_TCG_DEX_SET_MAP, USD_TO_TTD } from "@/lib/constants";
+import {
+  TCG_DATA_TO_TCG_DEX_SET_MAP,
+  TCG_DEX_EXCLUDE_NUM_PADDING,
+  USD_TO_TTD,
+} from "@/lib/constants";
 import { NextRequest, NextResponse } from "next/server";
 
 import { tcgdex } from "@/lib/tcgdex";
@@ -38,14 +42,21 @@ export async function GET(
   // Build TCGdex card ID.
   const setId = id.slice(0, separatorIndex);
   const rawNumber = id.slice(separatorIndex + 1);
-  const number = /^\d+$/.test(rawNumber)
-    ? rawNumber.padStart(3, "0")
-    : rawNumber;
   const tcgDexSetId = TCG_DATA_TO_TCG_DEX_SET_MAP[setId] ?? setId;
+  const shouldPadNumber =
+    /^\d+$/.test(rawNumber) &&
+    !TCG_DEX_EXCLUDE_NUM_PADDING.includes(tcgDexSetId);
+  const number = shouldPadNumber ? rawNumber.padStart(3, "0") : rawNumber;
   const tcgDexCardId = tcgDexSetId + "-" + number;
 
   // Fetch card from TCGdex.
-  const card = await tcgdex.card.get(tcgDexCardId);
+  let card;
+  try {
+    card = await tcgdex.card.get(tcgDexCardId);
+  } catch (error) {
+    console.error("Failed to fetch card from TCGdex:", error);
+  }
+
   if (!card) {
     return NextResponse.json(
       { error: `Card not found in TCGdex: ${tcgDexCardId}` },
